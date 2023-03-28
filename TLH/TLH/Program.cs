@@ -3,9 +3,54 @@ using System.Text.RegularExpressions;
 using Google.Apis.Classroom.v1.Data;
 using Google.Apis.Download;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Drive.v3;
 
 namespace TLH
 {
+    public static class DriveServiceExtensions
+    {
+        public static void DownloadWithStatus(this FilesResource.GetRequest request, MemoryStream memoryStream)
+        {
+            request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+            {
+                switch (progress.Status)
+                {
+                    case DownloadStatus.Downloading:
+                        Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
+                        break;
+                    case DownloadStatus.Completed:
+                        Console.WriteLine($"Download complete: {request.FileId}");
+                        memoryStream.Position = 0;
+                        break;
+                    case DownloadStatus.Failed:
+                        Console.WriteLine($"Download failed: {request.FileId}");
+                        break;
+                }
+            };
+            request.Download(memoryStream);
+        }
+
+        public static void DownloadWithStatus(this FilesResource.ExportRequest request, MemoryStream memoryStream)
+        {
+            request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+            {
+                switch (progress.Status)
+                {
+                    case DownloadStatus.Downloading:
+                        Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
+                        break;
+                    case DownloadStatus.Completed:
+                        Console.WriteLine($"Download complete: {request.FileId}");
+                        memoryStream.Position = 0;
+                        break;
+                    case DownloadStatus.Failed:
+                        Console.WriteLine($"Download failed: {request.FileId}");
+                        break;
+                }
+            };
+            request.Download(memoryStream);
+        }
+    }
     class Program
     {
         static void Main(string[] args)
@@ -137,7 +182,6 @@ namespace TLH
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
-
         private static IList<Student> GetActiveStudents(string courseId)
         {
             var allStudents = new List<Student>();
@@ -183,21 +227,6 @@ namespace TLH
             Directory.CreateDirectory(studentDirectory);
             Console.WriteLine($"Created directory for student: {studentName}");
             return studentDirectory;
-        }
-        private static void DownloadStudentFiles(string courseId, Student student, string studentDirectory)
-        {
-            var courseWorkRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(courseId);
-            var courseWorkResponse = courseWorkRequest.Execute();
-
-            foreach (var courseWork in courseWorkResponse.CourseWork)
-            {
-                if (courseWork.Assignment == null)
-                {
-                    continue;
-                }
-
-                DownloadCourseWorkFiles(courseId, courseWork, student, studentDirectory);
-            }
         }
         private static void DownloadCourseWorkFiles(string courseId, CourseWork courseWork, Student student, string studentDirectory)
         {
@@ -303,23 +332,44 @@ namespace TLH
                 return;
             }
 
-            var driveFile = GoogleApiHelper.DriveService.Files.Get(attachment.DriveFile.Id).Execute();
-            // ...
-        }
-        private static void HandleDownloadProgress(IDownloadProgress progress, MemoryStream stream, string filePath)
-        {
-            switch (progress.Status)
+            var fileId = attachment.DriveFile.Id;
+            var driveFile = GoogleApiHelper.DriveService.Files.Get(fileId).Execute();
+            var mimeType = driveFile.MimeType;
+            var exportMimeType = "";
+            var fileExtension = "";
+
+            if (mimeType == "application/vnd.google-apps.document")
             {
-                case DownloadStatus.Downloading:
-                    Console.WriteLine(progress.BytesDownloaded);
-                    break;
-                case DownloadStatus.Completed:
-                    Console.WriteLine("Download complete.");
-                    SaveFile(stream, filePath);
-                    break;
-                case DownloadStatus.Failed:
-                    Console.WriteLine("Download failed.");
-                    break;
+                exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                fileExtension = ".docx";
+            }
+            else if (mimeType == "application/vnd.google-apps.spreadsheet")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                fileExtension = ".xlsx";
+            }
+            else
+            {
+                fileExtension = Path.GetExtension(driveFile.Name);
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(driveFile.Name) + fileExtension;
+            var filePath = Path.Combine(studentDirectory, SanitizeFolderName(fileName));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                if (!string.IsNullOrEmpty(exportMimeType))
+                {
+                    GoogleApiHelper.DriveService.Files.Export(fileId, exportMimeType)
+                        .DownloadWithStatus(memoryStream);
+                }
+                else
+                {
+                    GoogleApiHelper.DriveService.Files.Get(fileId)
+                        .DownloadWithStatus(memoryStream);
+                }
+
+                SaveFile(memoryStream, filePath);
             }
         }
         private static void SaveFile(MemoryStream stream, string filePath)

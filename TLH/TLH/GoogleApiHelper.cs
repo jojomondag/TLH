@@ -17,6 +17,7 @@ namespace TLH
             ClassroomService.Scope.ClassroomRosters,
             ClassroomService.Scope.ClassroomProfileEmails,
             ClassroomService.Scope.ClassroomAnnouncementsReadonly,
+            ClassroomService.Scope.ClassroomCourseworkStudentsReadonly,
             DriveService.Scope.Drive,
         };
         public static ClassroomService ClassroomService { get; private set; }
