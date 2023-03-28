@@ -60,7 +60,6 @@ namespace TLH
         {
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {
-                string credPath = "token.json";
                 var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
                 credential = new UserCredential(new GoogleAuthorizationCodeFlow(
                     new GoogleAuthorizationCodeFlow.Initializer

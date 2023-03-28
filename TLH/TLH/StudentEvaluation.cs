@@ -1,8 +1,6 @@
 ﻿using Google.Apis.Classroom.v1;
-using Google.Apis.Classroom.v1.Data;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using System.Numerics;
 using TLH;
 public class StudentEvaluation
 {
@@ -125,7 +123,7 @@ public class StudentEvaluation
                     {
                         foreach (string assignmentName in assignmentEntry.Value)
                         {
-                            string sanitizedAssignmentName = Program.SanitizeFolderName(assignmentName);
+                            string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
                             worksheet.Cells[1, column].Value = sanitizedAssignmentName;
                             column++;
                         }
@@ -137,14 +135,14 @@ public class StudentEvaluation
                 {
                     foreach (string assignmentName in allUniqueAssignmentNames[DateTime.MinValue])
                     {
-                        string sanitizedAssignmentName = Program.SanitizeFolderName(assignmentName);
+                        string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
                         worksheet.Cells[1, column].Value = sanitizedAssignmentName;
                         column++;
                     }
                 }
 
                 // Add student data to the worksheet
-                        AddStudentData(worksheet, studentFolders);
+                AddStudentData(worksheet, studentFolders);
 
                 // Apply conditional formatting to the worksheet
                 SetConditionalFormatting(worksheet);
@@ -186,7 +184,7 @@ public class StudentEvaluation
             while (worksheet.Cells[1, column].Value != null)
             {
                 string assignmentName = worksheet.Cells[1, column].Value.ToString();
-                string studentAssignmentFolder = Path.Combine(studentFolder, assignmentName);
+                string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
 
                 // Check if the student has files in the assignment folder
                 if (Directory.Exists(studentAssignmentFolder))
