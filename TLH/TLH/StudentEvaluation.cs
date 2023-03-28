@@ -1,6 +1,8 @@
 ﻿using Google.Apis.Classroom.v1;
+using Google.Apis.Classroom.v1.Data;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System.Numerics;
 using TLH;
 public class StudentEvaluation
 {
@@ -29,9 +31,9 @@ public class StudentEvaluation
             Console.WriteLine($"User folder for {userName} not found on desktop.");
         }
     }
-    private static Dictionary<string, HashSet<string>> GetAllUniqueAssignmentNames()
+    private static Dictionary<string, SortedDictionary<DateTime, List<string>>> GetAllUniqueAssignmentNames()
     {
-        var allAssignmentNamesByCourse = new Dictionary<string, HashSet<string>>();
+        var allAssignmentNamesByCourse = new Dictionary<string, SortedDictionary<DateTime, List<string>>>();
 
         // Retrieve a list of all active courses
         var request = GoogleApiHelper.ClassroomService.Courses.List();
@@ -50,13 +52,21 @@ public class StudentEvaluation
             // Check if the assignments object is null
             if (assignments != null)
             {
-                // Create a hash set to store the unique assignment names for the current course
-                var uniqueAssignmentNames = new HashSet<string>();
+                // Create a sorted dictionary to store the unique assignment names for the current course
+                var uniqueAssignmentNames = new SortedDictionary<DateTime, List<string>>();
 
-                // Loop through each assignment and add its name to the hash set
+                // Loop through each assignment and add its name to the sorted dictionary
                 foreach (var assignment in assignments)
                 {
-                    uniqueAssignmentNames.Add(assignment.Title);
+                    DateTime dueDate = assignment.DueDate == null ? DateTime.MinValue : new DateTime(assignment.DueDate.Year.GetValueOrDefault(), assignment.DueDate.Month.GetValueOrDefault(), assignment.DueDate.Day.GetValueOrDefault());
+                    if (!uniqueAssignmentNames.ContainsKey(dueDate))
+                    {
+                        uniqueAssignmentNames.Add(dueDate, new List<string> { assignment.Title });
+                    }
+                    else
+                    {
+                        uniqueAssignmentNames[dueDate].Add(assignment.Title);
+                    }
                 }
 
                 // Add the unique assignment names for the current course to the dictionary
@@ -106,16 +116,35 @@ public class StudentEvaluation
                 // Set the header row for the worksheet
                 SetHeaderRow(worksheet);
 
-                // Add column headers for each unique assignment in the current class
                 int column = 2;
-                foreach (string assignmentName in allUniqueAssignmentNames)
+
+                // Add assignments with due dates first
+                foreach (var assignmentEntry in allUniqueAssignmentNames)
                 {
-                    worksheet.Cells[1, column].Value = assignmentName;
-                    column++;
+                    if (assignmentEntry.Key != DateTime.MinValue)
+                    {
+                        foreach (string assignmentName in assignmentEntry.Value)
+                        {
+                            string sanitizedAssignmentName = Program.SanitizeFolderName(assignmentName);
+                            worksheet.Cells[1, column].Value = sanitizedAssignmentName;
+                            column++;
+                        }
+                    }
+                }
+
+                // Add assignments with no due date last
+                if (allUniqueAssignmentNames.ContainsKey(DateTime.MinValue))
+                {
+                    foreach (string assignmentName in allUniqueAssignmentNames[DateTime.MinValue])
+                    {
+                        string sanitizedAssignmentName = Program.SanitizeFolderName(assignmentName);
+                        worksheet.Cells[1, column].Value = sanitizedAssignmentName;
+                        column++;
+                    }
                 }
 
                 // Add student data to the worksheet
-                AddStudentData(worksheet, studentFolders);
+                        AddStudentData(worksheet, studentFolders);
 
                 // Apply conditional formatting to the worksheet
                 SetConditionalFormatting(worksheet);
@@ -153,6 +182,7 @@ public class StudentEvaluation
 
             // Loop through each assignment column
             int column = 2;
+
             while (worksheet.Cells[1, column].Value != null)
             {
                 string assignmentName = worksheet.Cells[1, column].Value.ToString();
