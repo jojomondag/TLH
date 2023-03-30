@@ -29,9 +29,9 @@ public class StudentEvaluation
             Console.WriteLine($"User folder for {userName} not found on desktop.");
         }
     }
-    private static Dictionary<string, SortedDictionary<DateTime, List<string>>> GetAllUniqueAssignmentNames()
+    private static Dictionary<string, List<string>> GetAllUniqueAssignmentNames()
     {
-        var allAssignmentNamesByCourse = new Dictionary<string, SortedDictionary<DateTime, List<string>>>();
+        var allAssignmentNamesByCourse = new Dictionary<string, List<string>>();
 
         // Retrieve a list of all active courses
         var request = GoogleApiHelper.ClassroomService.Courses.List();
@@ -44,31 +44,24 @@ public class StudentEvaluation
         {
             // Retrieve the list of assignments for the current course
             var request2 = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(course.Id);
+            request2.OrderBy = "dueDate asc";
             var response2 = request2.Execute();
             var assignments = response2.CourseWork;
 
             // Check if the assignments object is null
             if (assignments != null)
             {
-                // Create a sorted dictionary to store the unique assignment names for the current course
-                var uniqueAssignmentNames = new SortedDictionary<DateTime, List<string>>();
+                // Create a list to store the unique assignment names for the current course
+                var uniqueAssignmentNames = new List<string>();
 
-                // Loop through each assignment and add its name to the sorted dictionary
+                // Loop through each assignment and add its name to the list
                 foreach (var assignment in assignments)
                 {
-                    DateTime dueDate = assignment.DueDate == null ? DateTime.MinValue : new DateTime(assignment.DueDate.Year.GetValueOrDefault(), assignment.DueDate.Month.GetValueOrDefault(), assignment.DueDate.Day.GetValueOrDefault());
-                    if (!uniqueAssignmentNames.ContainsKey(dueDate))
-                    {
-                        uniqueAssignmentNames.Add(dueDate, new List<string> { assignment.Title });
-                    }
-                    else
-                    {
-                        uniqueAssignmentNames[dueDate].Add(assignment.Title);
-                    }
+                    uniqueAssignmentNames.Add(assignment.Title);
                 }
 
                 // Add the unique assignment names for the current course to the dictionary
-                allAssignmentNamesByCourse.Add(course.Name, uniqueAssignmentNames);
+                allAssignmentNamesByCourse.Add(course.Name, uniqueAssignmentNames.Distinct().ToList());
             }
             else
             {
@@ -116,29 +109,12 @@ public class StudentEvaluation
 
                 int column = 2;
 
-                // Add assignments with due dates first
-                foreach (var assignmentEntry in allUniqueAssignmentNames)
+                // Add assignments to the worksheet
+                foreach (var assignmentName in allUniqueAssignmentNames)
                 {
-                    if (assignmentEntry.Key != DateTime.MinValue)
-                    {
-                        foreach (string assignmentName in assignmentEntry.Value)
-                        {
-                            string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
-                            worksheet.Cells[1, column].Value = sanitizedAssignmentName;
-                            column++;
-                        }
-                    }
-                }
-
-                // Add assignments with no due date last
-                if (allUniqueAssignmentNames.ContainsKey(DateTime.MinValue))
-                {
-                    foreach (string assignmentName in allUniqueAssignmentNames[DateTime.MinValue])
-                    {
-                        string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
-                        worksheet.Cells[1, column].Value = sanitizedAssignmentName;
-                        column++;
-                    }
+                    string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
+                    worksheet.Cells[1, column].Value = sanitizedAssignmentName;
+                    column++;
                 }
 
                 // Add student data to the worksheet
@@ -150,6 +126,8 @@ public class StudentEvaluation
                 // Auto-fit column widths
                 worksheet.Cells.AutoFitColumns();
             }
+
+            // Save the Excel file to disk
 
             // Save the Excel file to disk
             FileInfo excelFile = new FileInfo(Path.Combine(mainFolderPath, "StudentAssignments.xlsx"));
@@ -183,7 +161,7 @@ public class StudentEvaluation
 
             while (worksheet.Cells[1, column].Value != null)
             {
-                string assignmentName = worksheet.Cells[1, column].Value.ToString();
+                string assignmentName = worksheet.Cells[1, column].Value?.ToString() ?? string.Empty;
                 string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
 
                 // Check if the student has files in the assignment folder

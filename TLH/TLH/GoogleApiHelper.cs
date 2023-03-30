@@ -20,8 +20,8 @@ namespace TLH
             ClassroomService.Scope.ClassroomCourseworkStudentsReadonly,
             DriveService.Scope.Drive,
         };
-        public static ClassroomService ClassroomService { get; private set; }
-        public static DriveService DriveService { get; private set; }
+        public static ClassroomService ClassroomService { get; private set; } = new ClassroomService(new BaseClientService.Initializer());
+        public static DriveService DriveService { get; private set; } = new DriveService(new BaseClientService.Initializer());
         public static void InitializeGoogleServices()
         {
             UserCredential credential;

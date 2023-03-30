@@ -8,11 +8,19 @@ namespace TLH
     {
         static void Main(string[] args)
         {
+            GoogleApiHelper.InitializeGoogleServices();
+            /*
+            var openAi = new OpenAi();
+            var message = openAi.ConnectAsync().GetAwaiter().GetResult();
+            Console.WriteLine(message);
+            */
+            Start();
+        }
+        public static void Start()
+        {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
             Console.WriteLine("Press Escape to exit the program at any time.");
             Console.WriteLine();
-
-            GoogleApiHelper.InitializeGoogleServices();
 
             while (true)
             {

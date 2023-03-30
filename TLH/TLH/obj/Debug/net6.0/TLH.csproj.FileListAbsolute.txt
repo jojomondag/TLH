@@ -41,3 +41,12 @@ C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\TLH.pdb
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\TLH.genruntimeconfig.cache
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\ref\TLH.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\credentials.json
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\OpenAI.GPT3.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Configuration.Binder.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Http.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Logging.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Options.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
