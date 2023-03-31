@@ -296,14 +296,48 @@ namespace TLH
         private static void SaveFile(MemoryStream stream, string filePath)
         {
             var fileName = Path.GetFileName(filePath);
-            var directory = Path.GetDirectoryName(filePath);
+            var directory = Path.GetDirectoryName(filePath)?.TrimEnd(); // Trim trailing spaces from the directory
             var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
             var sanitizedFilePath = Path.Combine(directory ?? string.Empty, sanitizedFileName ?? string.Empty);
+
+            // Shorten the file path if it's too long
+            sanitizedFilePath = ShortenPath(sanitizedFilePath);
+
+            // Get the parent directory of the sanitizedFilePath
+            var parentDirectory = Path.GetDirectoryName(sanitizedFilePath);
+
+            // Create the directory if it doesn't exist
+            if (parentDirectory != null && !Directory.Exists(parentDirectory))
+            {
+                Directory.CreateDirectory(parentDirectory);
+            }
 
             using (var fileStream = new FileStream(sanitizedFilePath, FileMode.Create, FileAccess.Write))
             {
                 stream.WriteTo(fileStream);
             }
         }
+        private static string ShortenPath(string path, int maxLength = 260)
+        {
+            if (path.Length <= maxLength)
+            {
+                return path;
+            }
+
+            var fileName = Path.GetFileName(path);
+            var directory = Path.GetDirectoryName(path);
+
+            int allowedLengthForName = maxLength - directory.Length - 1; // -1 for the path separator
+
+            if (allowedLengthForName > 0)
+            {
+                var shortenedFileName = fileName.Substring(0, Math.Min(fileName.Length, allowedLengthForName));
+                return Path.Combine(directory, shortenedFileName);
+            }
+
+            // If there's not enough space for even a single character file name, return the original path (this will still cause an exception)
+            return path;
+        }
+
     }
 }
