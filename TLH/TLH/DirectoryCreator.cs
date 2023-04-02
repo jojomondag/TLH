@@ -35,20 +35,6 @@ public class DirectoryManager
         Console.WriteLine($"Created directory for assignment: {assignmentName}");
         return assignmentDirectory;
     }
-    public static void DeleteEmptyFolders(string directory)
-    {
-        foreach (var dir in Directory.GetDirectories(directory))
-        {
-            if (Directory.GetFiles(dir).Length == 0 && Directory.GetDirectories(dir).Length == 0 && dir != directory)
-            {
-                Directory.Delete(dir);
-            }
-            else
-            {
-                DeleteEmptyFolders(dir);
-            }
-        }
-    }
     public static string SanitizeFolderName(string folderName)
     {
         var invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());

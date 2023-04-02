@@ -129,18 +129,16 @@ namespace TLH
                 var courseWorkRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(courseId);
                 var courseWorkResponse = courseWorkRequest.Execute();
 
-                foreach (var courseWork in courseWorkResponse.CourseWork)
-                {
-                    if (courseWork.Assignment == null)
-                    {
-                        continue;
-                    }
+                var courseWorks = courseWorkResponse.CourseWork.Where(cw => cw.Assignment != null).ToList();
 
-                    DownloadCourseWorkFiles(courseId, courseWork, student, studentDirectory);
+                if (courseWorks.Count > 0)
+                {
+                    foreach (var courseWork in courseWorks)
+                    {
+                        DownloadCourseWorkFiles(courseId, courseWork, student, studentDirectory);
+                    }
                 }
             });
-
-            DirectoryManager.DeleteEmptyFolders(courseDirectory);
         }
         public static void PrintActiveStudentsInClassroom()
         {
@@ -183,17 +181,24 @@ namespace TLH
                 return;
             }
 
-            string assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork);
-
             try
             {
                 var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWork.Id);
                 submissionRequest.UserId = student.UserId;
                 var submissionResponse = submissionRequest.Execute();
 
-                foreach (var submission in submissionResponse.StudentSubmissions)
+                // Check if there are any attachments in the submissions
+                var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
+                    submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
+
+                if (hasAttachments)
                 {
-                    DownloadAttachments(assignmentDirectory, submission);
+                    string assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork);
+
+                    foreach (var submission in submissionResponse.StudentSubmissions)
+                    {
+                        DownloadAttachments(assignmentDirectory, submission);
+                    }
                 }
             }
             catch (Google.GoogleApiException ex)
