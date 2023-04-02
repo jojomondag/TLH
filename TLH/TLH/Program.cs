@@ -20,7 +20,6 @@ namespace TLH
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
             Console.WriteLine("Press Escape to exit the program at any time.");
-            Console.WriteLine();
 
             while (true)
             {
