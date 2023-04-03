@@ -36,15 +36,11 @@ public class DirectoryManager
 
         return studentDirectory;
     }
-    public static string CreateAssignmentDirectory(string studentDirectory, CourseWork courseWork)
+    public static string CreateAssignmentDirectory(string studentDirectory, CourseWork courseWork, string courseId)
     {
         var assignmentName = SanitizeFolderName(courseWork.Title);
-        var (assignmentDirectory, isNewlyCreated) = CreateDirectory(studentDirectory, assignmentName);
-
-        if (isNewlyCreated)
-        {
-            Console.WriteLine($"Created directory for assignment: {assignmentName}");
-        }
+        var assignmentDirectory = Path.Combine(studentDirectory, $"{assignmentName}");
+        Directory.CreateDirectory(assignmentDirectory);
 
         return assignmentDirectory;
     }

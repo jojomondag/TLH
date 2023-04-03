@@ -114,9 +114,8 @@ public class StudentEvaluation
                 // Get the class name from the folder name
                 string className = Path.GetFileName(classFolder);
 
-                string courseId = GetCourseIdByClassName(className); // You need to implement this method
-                var allUniqueAssignmentNames = allUniqueAssignmentNamesByCourse[$"{className}_{courseId}"];
-
+                // Get a list of all unique assignment names for the current class
+                var allUniqueAssignmentNames = allUniqueAssignmentNamesByCourse[className];
 
                 // Get a list of all student folders within the class folder
                 string[] studentFolders = Directory.GetDirectories(classFolder);

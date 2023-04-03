@@ -100,8 +100,9 @@ namespace TLH
                 var response = request.Execute();
                 allStudents.AddRange(response.Students);
 
-                nextPageToken = response.NextPageToken;
+                nextPageToken = response?.NextPageToken;
             } while (nextPageToken != null);
+
 
             var selectedStudent = GetUserSelection<Student>(allStudents, "Select a student by entering their number:");
             return selectedStudent.Profile.Id;
@@ -131,7 +132,7 @@ namespace TLH
             var students = GetActiveStudents(courseId);
             var courseName = GetCourseName(courseId);
 
-            var courseDirectory = Path.Combine(userDirectory, DirectoryManager.SanitizeFolderName(courseName));
+            var courseDirectory = Path.Combine(userDirectory, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
             Directory.CreateDirectory(courseDirectory);
 
             Parallel.ForEach(students, student =>
@@ -151,7 +152,7 @@ namespace TLH
                         if (hasAttachments)
                         {
                             // Create an assignment folder for each courseWork only if there are attachments
-                            var assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork);
+                            var assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork,courseId);
                             DownloadCourseWorkFiles(courseId, courseWork, student, assignmentDirectory);
                         }
                     }
@@ -355,10 +356,8 @@ namespace TLH
                 var shortenedFileName = fileName.Substring(0, Math.Min(fileName.Length, allowedLengthForName));
                 return Path.Combine(directory, shortenedFileName);
             }
-
             // If there's not enough space for even a single character file name, return the original path (this will still cause an exception)
             return path;
         }
-
     }
 }
