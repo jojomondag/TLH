@@ -61,7 +61,7 @@ public class StudentEvaluation
                 }
 
                 // Add the unique assignment names for the current course to the dictionary
-                allAssignmentNamesByCourse.Add(course.Name, uniqueAssignmentNames.Distinct().ToList());
+                allAssignmentNamesByCourse.Add($"{course.Name}_{course.Id}", uniqueAssignmentNames.Distinct().ToList());
             }
             else
             {
@@ -72,6 +72,28 @@ public class StudentEvaluation
 
         return allAssignmentNamesByCourse;
     }
+    private static string GetCourseIdByClassName(string className)
+    {
+        var request = GoogleApiHelper.ClassroomService.Courses.List();
+        request.TeacherId = "me";
+        request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
+        var courses = request.Execute().Courses;
+
+        if (courses != null)
+        {
+            foreach (var course in courses)
+            {
+                if (course.Name == className)
+                {
+                    return course.Id;
+                }
+            }
+        }
+
+        // Return an empty string if no matching course is found
+        return string.Empty;
+    }
+
     public static void GenerateStudentAssignment(string mainFolderPath)
     {
         // Set the EPPlus license context to NonCommercial
@@ -92,8 +114,9 @@ public class StudentEvaluation
                 // Get the class name from the folder name
                 string className = Path.GetFileName(classFolder);
 
-                // Get a list of all unique assignment names for the current class
-                var allUniqueAssignmentNames = allUniqueAssignmentNamesByCourse[className];
+                string courseId = GetCourseIdByClassName(className); // You need to implement this method
+                var allUniqueAssignmentNames = allUniqueAssignmentNamesByCourse[$"{className}_{courseId}"];
+
 
                 // Get a list of all student folders within the class folder
                 string[] studentFolders = Directory.GetDirectories(classFolder);
