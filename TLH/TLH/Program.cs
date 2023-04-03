@@ -112,6 +112,19 @@ namespace TLH
             var response = request.Execute();
             return response.EmailAddress;
         }
+        private static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
+        {
+            var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
+            submissionRequest.UserId = studentUserId;
+            var submissionResponse = submissionRequest.Execute();
+
+            // Check if there are any attachments in the submissions
+            var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
+                submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
+
+            return hasAttachments;
+        }
+
         public static void DownloadAllFilesFromClassroom(string courseId)
         {
             var userDirectory = DirectoryManager.CreateStudentDirectoryOnDesktop();
@@ -134,7 +147,13 @@ namespace TLH
                 {
                     foreach (var courseWork in courseWorks)
                     {
-                        DownloadCourseWorkFiles(courseId, courseWork, student, studentDirectory);
+                        var hasAttachments = HasCourseWorkAttachments(courseId, courseWork.Id, student.UserId);
+                        if (hasAttachments)
+                        {
+                            // Create an assignment folder for each courseWork only if there are attachments
+                            var assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork);
+                            DownloadCourseWorkFiles(courseId, courseWork, student, assignmentDirectory);
+                        }
                     }
                 }
             });
