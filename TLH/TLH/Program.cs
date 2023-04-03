@@ -115,16 +115,26 @@ namespace TLH
         }
         private static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
         {
-            var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
-            submissionRequest.UserId = studentUserId;
-            var submissionResponse = submissionRequest.Execute();
+            try
+            {
+                var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
+                submissionRequest.UserId = studentUserId;
+                var submissionResponse = submissionRequest.Execute();
 
-            // Check if there are any attachments in the submissions
-            var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
-                submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
+                // Check if there are any attachments in the submissions
+                var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
+                    submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
 
-            return hasAttachments;
+                return hasAttachments;
+            }
+            catch (Exception ex)
+            {
+                // Log the error and studentUserId
+                Console.WriteLine($"Error occurred while checking for attachments for student {studentUserId}: {ex.Message}");
+                return false;
+            }
         }
+
 
         public static void DownloadAllFilesFromClassroom(string courseId)
         {
@@ -181,7 +191,16 @@ namespace TLH
                 request.PageSize = 100;
                 request.PageToken = nextPageToken;
                 var response = request.Execute();
-                allStudents.AddRange(response.Students);
+
+                //allStudents.AddRange can be null we need too add exception handeling 
+                try
+                {
+                    allStudents.AddRange(response.Students);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred while getting students for classroom {courseId}: {ex.Message}");
+                }
 
                 nextPageToken = response.NextPageToken;
             } while (nextPageToken != null);
@@ -252,6 +271,17 @@ namespace TLH
 
                             driveFile = GoogleApiHelper.DriveService.Files.Get(attachment.DriveFile.Id).Execute();
                         }
+                        else if (!string.IsNullOrEmpty(attachment.Link?.Url))
+                        {
+                            // If the attachment is a link, download the link as a text file
+                            var fileName = $"{DirectoryManager.SanitizeFolderName(attachment.Link.ToString())}.url";
+                            var filePath = Path.Combine(studentDirectory, fileName);
+
+                            using (var writer = new StreamWriter(filePath))
+                            {
+                                writer.WriteLine(attachment.Link.Url);
+                            }
+                        }
                         else
                         {
                             Console.WriteLine($"DriveFile object is null or DriveFile.Id is empty for student: {student.Profile.Name.FullName}, Attachment: {attachment.DriveFile?.Id ?? "null"}");
@@ -260,7 +290,14 @@ namespace TLH
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Error retrieving the DriveFile: " + ex.Message);
+                        Console.WriteLine("Error retrieving the attachment: " + ex.Message);
+                        continue;
+                    }
+
+                    // Check if the attachment is a Google Drive folder, and skip it if it is
+                    if (driveFile?.MimeType == "application/vnd.google-apps.folder")
+                    {
+                        Console.WriteLine($"Skipping folder for student: {student.Profile.Name.FullName}, Attachment: {driveFile.Name}");
                         continue;
                     }
 
