@@ -192,11 +192,9 @@ namespace TLH
 
                 if (hasAttachments)
                 {
-                    string assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork);
-
                     foreach (var submission in submissionResponse.StudentSubmissions)
                     {
-                        DownloadAttachments(assignmentDirectory, submission);
+                        DownloadAttachments(studentDirectory, submission, student); // Pass the student object
                     }
                 }
             }
@@ -205,7 +203,7 @@ namespace TLH
                 Console.WriteLine($"Error: {ex.Message}\nCourseId: {courseId}\nCourseWorkId: {courseWork.Id}\nStudentId: {student.UserId}");
             }
         }
-        private static void DownloadAttachments(string studentDirectory, StudentSubmission submission)
+        private static void DownloadAttachments(string studentDirectory, StudentSubmission submission, Student student)
         {
             var attachments = submission.AssignmentSubmission?.Attachments;
 
@@ -217,7 +215,7 @@ namespace TLH
 
                     try
                     {
-                        if (attachment.DriveFile != null)
+                        if (attachment.DriveFile != null && !string.IsNullOrEmpty(attachment.DriveFile.Id))
                         {
                             UserCredential? credential = GoogleApiHelper.ClassroomService.HttpClientInitializer as UserCredential;
                             if (credential?.Token?.IsExpired(credential?.Flow?.Clock) == true)
@@ -236,7 +234,7 @@ namespace TLH
                         }
                         else
                         {
-                            Console.WriteLine("DriveFile object is null.");
+                            Console.WriteLine($"DriveFile object is null or DriveFile.Id is empty for student: {student.Profile.Name.FullName}, Attachment: {attachment.DriveFile?.Id ?? "null"}");
                             continue;
                         }
                     }
