@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using Google.Apis.Auth.OAuth2;
 
 namespace TLH
 {
@@ -38,12 +37,11 @@ namespace TLH
                 {
                     case ConsoleKey.D1:
                         var courseId = SelectClassroomAndGetId();
-                        DownloadAllFilesFromClassroom(courseId);
+                        DownloadService.DownloadAllFilesFromClassroom(courseId);
                         break;
 
                     case ConsoleKey.D2:
                         StudentEvaluation.LookForUserFolder();
-
                         break;
 
                     default:
@@ -113,7 +111,7 @@ namespace TLH
             var response = request.Execute();
             return response.EmailAddress;
         }
-        private static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
+        public static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
         {
             try
             {
@@ -134,41 +132,6 @@ namespace TLH
                 return false;
             }
         }
-
-
-        public static void DownloadAllFilesFromClassroom(string courseId)
-        {
-            var userDirectory = DirectoryManager.CreateStudentDirectoryOnDesktop();
-            var students = GetActiveStudents(courseId);
-            var courseName = GetCourseName(courseId);
-
-            var courseDirectory = Path.Combine(userDirectory, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
-            Directory.CreateDirectory(courseDirectory);
-
-            Parallel.ForEach(students, student =>
-            {
-                var studentDirectory = DirectoryManager.CreateStudentDirectory(courseDirectory, student);
-
-                var courseWorkRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(courseId);
-                var courseWorkResponse = courseWorkRequest.Execute();
-
-                var courseWorks = courseWorkResponse.CourseWork.Where(cw => cw.Assignment != null).ToList();
-
-                if (courseWorks.Count > 0)
-                {
-                    foreach (var courseWork in courseWorks)
-                    {
-                        var hasAttachments = HasCourseWorkAttachments(courseId, courseWork.Id, student.UserId);
-                        if (hasAttachments)
-                        {
-                            // Create an assignment folder for each courseWork only if there are attachments
-                            var assignmentDirectory = DirectoryManager.CreateAssignmentDirectory(studentDirectory, courseWork,courseId);
-                            DownloadCourseWorkFiles(courseId, courseWork, student, assignmentDirectory);
-                        }
-                    }
-                }
-            });
-        }
         public static void PrintActiveStudentsInClassroom()
         {
             var courseId = SelectClassroomAndGetId();
@@ -180,7 +143,7 @@ namespace TLH
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
-        private static IList<Student> GetActiveStudents(string courseId)
+        public static IList<Student> GetActiveStudents(string courseId)
         {
             var allStudents = new List<Student>();
             string? nextPageToken = null;
@@ -207,194 +170,10 @@ namespace TLH
 
             return allStudents;
         }
-        private static string GetCourseName(string courseId)
+        public static string GetCourseName(string courseId)
         {
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();
             return DirectoryManager.SanitizeFolderName(course.Name);
-        }
-        private static void DownloadCourseWorkFiles(string courseId, CourseWork courseWork, Student student, string studentDirectory)
-        {
-            if (courseWork.Assignment == null)
-            {
-                return;
-            }
-
-            try
-            {
-                var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWork.Id);
-                submissionRequest.UserId = student.UserId;
-                var submissionResponse = submissionRequest.Execute();
-
-                // Check if there are any attachments in the submissions
-                var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
-                    submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
-
-                if (hasAttachments)
-                {
-                    foreach (var submission in submissionResponse.StudentSubmissions)
-                    {
-                        DownloadAttachments(studentDirectory, submission, student); // Pass the student object
-                    }
-                }
-            }
-            catch (Google.GoogleApiException ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}\nCourseId: {courseId}\nCourseWorkId: {courseWork.Id}\nStudentId: {student.UserId}");
-            }
-        }
-        private static void DownloadAttachments(string studentDirectory, StudentSubmission submission, Student student)
-        {
-            var attachments = submission.AssignmentSubmission?.Attachments;
-
-            if (attachments != null)
-            {
-                foreach (var attachment in attachments)
-                {
-                    Google.Apis.Drive.v3.Data.File? driveFile = null;
-
-                    try
-                    {
-                        if (attachment.DriveFile != null && !string.IsNullOrEmpty(attachment.DriveFile.Id))
-                        {
-                            UserCredential? credential = GoogleApiHelper.ClassroomService.HttpClientInitializer as UserCredential;
-                            if (credential?.Token?.IsExpired(credential?.Flow?.Clock) == true)
-                            {
-                                if (credential != null)
-                                {
-                                    GoogleApiHelper.RefreshAccessToken(credential);
-                                }
-                                else
-                                {
-                                    // Handle the case when the credential is null, if necessary.
-                                }
-                            }
-
-                            driveFile = GoogleApiHelper.DriveService.Files.Get(attachment.DriveFile.Id).Execute();
-                        }
-                        else if (!string.IsNullOrEmpty(attachment.Link?.Url))
-                        {
-                            // If the attachment is a link, download the link as a text file
-                            var fileName = $"{DirectoryManager.SanitizeFolderName(attachment.Link.ToString())}.url";
-                            var filePath = Path.Combine(studentDirectory, fileName);
-
-                            using (var writer = new StreamWriter(filePath))
-                            {
-                                writer.WriteLine(attachment.Link.Url);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine($"DriveFile object is null or DriveFile.Id is empty for student: {student.Profile.Name.FullName}, Attachment: {attachment.DriveFile?.Id ?? "null"}");
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error retrieving the attachment: " + ex.Message);
-                        continue;
-                    }
-
-                    // Check if the attachment is a Google Drive folder, and skip it if it is
-                    if (driveFile?.MimeType == "application/vnd.google-apps.folder")
-                    {
-                        Console.WriteLine($"Skipping folder for student: {student.Profile.Name.FullName}, Attachment: {driveFile.Name}");
-                        continue;
-                    }
-
-                    DownloadAttachment(studentDirectory, driveFile);
-                }
-            }
-        }
-        private static void DownloadAttachment(string studentDirectory, Google.Apis.Drive.v3.Data.File driveFile)
-        {
-            if (driveFile == null)
-            {
-                Console.WriteLine("Error: Drive file is null.");
-                return;
-            }
-
-            var fileId = driveFile.Id;
-            var mimeType = driveFile.MimeType;
-            var exportMimeType = "";
-            var fileExtension = "";
-
-            if (mimeType == "application/vnd.google-apps.document")
-            {
-                exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-                fileExtension = ".docx";
-            }
-            else if (mimeType == "application/vnd.google-apps.spreadsheet")
-            {
-                exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                fileExtension = ".xlsx";
-            }
-            else
-            {
-                fileExtension = Path.GetExtension(driveFile.Name);
-            }
-
-            var fileName = Path.GetFileNameWithoutExtension(driveFile.Name) + fileExtension;
-            var filePath = Path.Combine(studentDirectory, DirectoryManager.SanitizeFolderName(fileName));
-
-            using (var memoryStream = new MemoryStream())
-            {
-                if (!string.IsNullOrEmpty(exportMimeType))
-                {
-                    GoogleApiHelper.DriveService.Files.Export(fileId, exportMimeType)
-                        .DownloadWithStatus(memoryStream);
-                }
-                else
-                {
-                    GoogleApiHelper.DriveService.Files.Get(fileId)
-                        .DownloadWithStatus(memoryStream);
-                }
-
-                SaveFile(memoryStream, filePath);
-            }
-        }
-        private static void SaveFile(MemoryStream stream, string filePath)
-        {
-            var fileName = Path.GetFileName(filePath);
-            var directory = Path.GetDirectoryName(filePath)?.TrimEnd(); // Trim trailing spaces from the directory
-            var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
-            var sanitizedFilePath = Path.Combine(directory ?? string.Empty, sanitizedFileName ?? string.Empty);
-
-            // Shorten the file path if it's too long
-            sanitizedFilePath = ShortenPath(sanitizedFilePath);
-
-            // Get the parent directory of the sanitizedFilePath
-            var parentDirectory = Path.GetDirectoryName(sanitizedFilePath);
-
-            // Create the directory if it doesn't exist
-            if (parentDirectory != null && !Directory.Exists(parentDirectory))
-            {
-                Directory.CreateDirectory(parentDirectory);
-            }
-
-            using (var fileStream = new FileStream(sanitizedFilePath, FileMode.Create, FileAccess.Write))
-            {
-                stream.WriteTo(fileStream);
-            }
-        }
-        private static string ShortenPath(string path, int maxLength = 260)
-        {
-            if (path.Length <= maxLength)
-            {
-                return path;
-            }
-
-            var fileName = Path.GetFileName(path);
-            var directory = Path.GetDirectoryName(path);
-
-            int allowedLengthForName = maxLength - directory.Length - 1; // -1 for the path separator
-
-            if (allowedLengthForName > 0)
-            {
-                var shortenedFileName = fileName.Substring(0, Math.Min(fileName.Length, allowedLengthForName));
-                return Path.Combine(directory, shortenedFileName);
-            }
-            // If there's not enough space for even a single character file name, return the original path (this will still cause an exception)
-            return path;
         }
     }
 }
