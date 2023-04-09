@@ -61,15 +61,21 @@ namespace TLH
                         else if (attachment.Link != null)
                         {
                             string linkUrl = attachment.Link.Url;
-                            string fileName = $"Link_{Guid.NewGuid()}.txt"; // Generate a unique file name for the link
+                            string fileName = "Link_" + linkUrl.GetHashCode() + ".txt"; // Use the link's hashcode to create a unique file name
 
-                            using (var fileStream = new FileStream(Path.Combine(studentDirectory, fileName), FileMode.Create, FileAccess.Write))
-                            using (var streamWriter = new StreamWriter(fileStream))
+                            string filePath = Path.Combine(studentDirectory, fileName);
+
+                            // Check if the file already exists, if not, create and save the link
+                            if (!File.Exists(filePath))
                             {
-                                await streamWriter.WriteAsync(linkUrl);
-                            }
+                                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                                using (var streamWriter = new StreamWriter(fileStream))
+                                {
+                                    await streamWriter.WriteAsync(linkUrl);
+                                }
 
-                            Console.WriteLine($"Saved link: {linkUrl} as {fileName}");
+                                Console.WriteLine($"Saved link: {linkUrl} as {fileName}");
+                            }
                         }
                         else
                         {
