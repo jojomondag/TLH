@@ -50,3 +50,8 @@ C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extension
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Options.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\selenium-manager\linux\selenium-manager
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\selenium-manager\macos\selenium-manager
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\selenium-manager\windows\selenium-manager.exe
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\HtmlAgilityPack.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\WebDriver.dll

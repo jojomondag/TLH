@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
+using TLH;
 
 namespace TLH
 {
@@ -13,6 +14,7 @@ namespace TLH
             var message = openAi.ConnectAsync().GetAwaiter().GetResult();
             Console.WriteLine(message);
             */
+            //WebScraper.StartScraping();
             Start();
         }
         public static void Start()

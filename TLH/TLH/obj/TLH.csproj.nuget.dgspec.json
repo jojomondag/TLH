@@ -63,6 +63,22 @@
             "Google.Apis.Drive.v3": {
               "target": "Package",
               "version": "[1.60.0.2986, )"
+            },
+            "HtmlAgilityPack": {
+              "target": "Package",
+              "version": "[1.11.46, )"
+            },
+            "Selenium.WebDriver": {
+              "target": "Package",
+              "version": "[4.8.2, )"
+            },
+            "Selenium.WebDriver.ChromeDriver": {
+              "target": "Package",
+              "version": "[112.0.5615.4900, )"
+            },
+            "Selenium.WebDriver.MicrosoftDriver": {
+              "target": "Package",
+              "version": "[17.17134.0, )"
             }
           },
           "imports": [
