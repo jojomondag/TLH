@@ -27,6 +27,7 @@ namespace TLH
                 Console.WriteLine();
                 Console.WriteLine("Press 1 to select a classroom and download files.");
                 Console.WriteLine("Press 2 to evaluate student folders.");
+                Console.WriteLine("Press 3 to grade a student.");
                 Console.WriteLine("Press Escape to exit.");
                 var key = Console.ReadKey(true).Key;
 
@@ -44,6 +45,9 @@ namespace TLH
 
                     case ConsoleKey.D2:
                         StudentEvaluation.LookForUserFolder();
+                        break;
+                    case ConsoleKey.D3:
+
                         break;
 
                     default:

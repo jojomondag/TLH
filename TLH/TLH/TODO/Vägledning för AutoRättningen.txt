@@ -1,0 +1,18 @@
+﻿Console.WriteLine("Press 3 to grade a student.");
+
+	1. Efter att jag har tryckt på 3. Så skall man få välja en kurs som man vill utföra bedömmningen på. 
+	2. Efter man har valt kurs får man välja en elev ifrån en lista på elever, I denna lista har vi färger på elevernas namn.
+		Färgerna indikerar om det finns en tidigare bedömmning på eleven.
+	3. Efter man har valt en elev så kommer en bedömnings funktion att kicka igång, idenna funktion sammlar vi ihop allt material
+		vi har eller behöver.
+	4. Efter att vi har samlat ihop allt material så skall vi kunna bedöma eleven. Materialet som vi sammlar ihop är.
+		- Elevens namn, - Elevens kurs, PDF ifrån mappen Data Baserat på Namnet på kursen.
+		Prompt på hur eleven skall bedömmas, samt en format lista som specificerar hur eleven skall bedömmas.
+	5. Denna data skickas sedan till OPEN AI i rätt ordning som sedan skall bedöma eleven.
+	6. Efter att eleven har bedömts så skall vi få en bedömning på eleven, denna bedömmning sparar vi ner i elevens mapp 
+		för den kurs som eleven läser.
+
+
+
+	extra. I min Data folder har jag en PDF med kurskriterier, för en Kurs. Använda denna för att Bedömma en elev.
+	extra. PineCone för större data.
