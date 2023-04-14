@@ -1,26 +1,26 @@
 ﻿{
-    "kurs": "[Kursens namn]",
-    "elevens_namn": "[Elevens namn]",
-    "betygsprognos": {
-        "otillrackliga_prestationer": false,
-        "tillrackliga_prestationer": false,
-        "goda_prestationer": true
-    },
-    "elevens_malbetyg": "[Målbetyg]",
-    "elevens_betyg": "[Betyg]",
-    "aterkoppling": [
-        {
-            "datum": "[ÅÅÅÅ-MM-DD]",
-            "kommentar": "[Kommentar]"
-        }
-    ],
-    "uppgifter": [
-        {
-            "uppgift": "[Uppgiftens namn]",
-            "betyg": "[Betyg]",
-            "kommentarer": [
-                "[Kommentar]"
-            ]
-        }
-    ]
+  "kurs": "[Kursens namn]",
+  "elevens_namn": "[Elevens namn]",
+  "betygsprognos": {
+    "otillrackliga_prestationer": false,
+    "tillrackliga_prestationer": false,
+    "goda_prestationer": true
+  },
+  "elevens_malbetyg": "[Målbetyg]",
+  "elevens_betyg": "[Betyg]",
+  "aterkoppling": [
+    {
+      "datum": "[ÅÅÅÅ-MM-DD]",
+      "kommentar": "[Kommentar]"
+    }
+  ],
+  "uppgifter": [
+    {
+      "uppgift": "[Uppgiftens namn]",
+      "betyg": "[Betyg]",
+      "kommentarer": [
+        "[Kommentar]"
+      ]
+    }
+  ]
 }

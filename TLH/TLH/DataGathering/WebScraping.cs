@@ -1,7 +1,5 @@
-﻿using System;
-using OpenQA.Selenium;
+﻿using HtmlAgilityPack;
 using OpenQA.Selenium.Edge;
-using HtmlAgilityPack;
 
 namespace TLH
 {

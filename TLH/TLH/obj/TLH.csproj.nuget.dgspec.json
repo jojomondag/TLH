@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[6.8.3, )"
             },
+            "DocumentFormat.OpenXml": {
+              "target": "Package",
+              "version": "[2.20.0, )"
+            },
             "EPPlus": {
               "target": "Package",
               "version": "[6.2.0, )"
@@ -68,6 +72,10 @@
               "target": "Package",
               "version": "[1.11.46, )"
             },
+            "Python.Runtime": {
+              "target": "Package",
+              "version": "[2.7.9, )"
+            },
             "Selenium.WebDriver": {
               "target": "Package",
               "version": "[4.8.2, )"
@@ -79,6 +87,10 @@
             "Selenium.WebDriver.MicrosoftDriver": {
               "target": "Package",
               "version": "[17.17134.0, )"
+            },
+            "pythonnet": {
+              "target": "Package",
+              "version": "[3.0.1, )"
             }
           },
           "imports": [

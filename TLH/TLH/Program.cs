@@ -1,22 +1,69 @@
-﻿using Google.Apis.Classroom.v1;
+﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml;
+using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using TLH;
 
 namespace TLH
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static string userPathLocation;
+        private static void Main(string[] args)
         {
+            string stupid = "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";
+            run();
+            userPathLocation = DirectoryManager.CreateStudentDirectoryOnDesktop();
             GoogleApiHelper.InitializeGoogleServices();
-            /*
-            var openAi = new OpenAi();
-            var message = openAi.ConnectAsync().GetAwaiter().GetResult();
-            Console.WriteLine(message);
-            */
-            //WebScraper.StartScraping();
             Start();
         }
+        static void run()
+        {
+            // Create a new Word document
+            using (WordprocessingDocument doc = WordprocessingDocument.Create("my_document.docx", WordprocessingDocumentType.Document))
+            {
+                // Add a new main document part
+                MainDocumentPart mainPart = doc.AddMainDocumentPart();
+                mainPart.Document = new Document();
+
+                // Create a new StyleDefinitionsPart and add the default styles
+                StyleDefinitionsPart stylePart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                Styles styles = new Styles();
+                stylePart.Styles = styles;
+                Style style = new Style()
+                {
+                    Type = StyleValues.Paragraph,
+                    StyleId = "Heading1",
+                    PrimaryStyle = new PrimaryStyle()
+                };
+
+                style.Append(new StyleName() { Val = "heading 1" });
+                style.Append(new BasedOn() { Val = "Normal" });
+                style.Append(new NextParagraphStyle() { Val = "Normal" });
+                style.Append(new LinkedStyle() { Val = "Heading1Char" });
+                style.Append(new UIPriority() { Val = 9 });
+                style.Append(new UnhideWhenUsed());
+                style.Append(new StyleRunProperties(new Bold(), new BoldComplexScript(), new FontSize() { Val = "28" }, new FontSizeComplexScript() { Val = "28" }));
+
+                styles.Append(style);
+
+                // Add a heading with the text "Josef" and apply a heading style
+                Body body = mainPart.Document.AppendChild(new Body());
+                Paragraph paragraph = body.AppendChild(new Paragraph());
+                Run run = paragraph.AppendChild(new Run());
+                run.AppendChild(new Text("Josef"));
+
+                // Apply the Heading 1 style
+                ParagraphProperties paragraphProperties = paragraph.AppendChild(new ParagraphProperties());
+                ParagraphStyleId paragraphStyleId = paragraphProperties.AppendChild(new ParagraphStyleId());
+                paragraphStyleId.Val = "Heading1";
+
+                // Save the document
+                mainPart.Document.Save();
+            }
+        }
+
+
         public static void Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
@@ -36,17 +83,21 @@ namespace TLH
                     break;
                 }
 
+                var courseId = SelectClassroomAndGetId();
+
                 switch (key)
                 {
                     case ConsoleKey.D1:
-                        var courseId = SelectClassroomAndGetId();
                         DownloadService.DownloadAllFilesFromClassroom(courseId);
                         break;
 
                     case ConsoleKey.D2:
                         StudentEvaluation.LookForUserFolder();
                         break;
+
                     case ConsoleKey.D3:
+                        StudentTextExtractor ste = new StudentTextExtractor();
+                        ste.ExtractTextFromStudentAssignments(courseId);
 
                         break;
 
@@ -56,6 +107,7 @@ namespace TLH
                 }
             }
         }
+
         public static T GetUserSelection<T>(IList<T> items, string displayMessage)
         {
             Console.WriteLine();
@@ -83,6 +135,7 @@ namespace TLH
                 Console.WriteLine("Invalid selection. Please try again.");
             }
         }
+
         public static string SelectClassroomAndGetId()
         {
             var request = GoogleApiHelper.ClassroomService.Courses.List();
@@ -91,6 +144,7 @@ namespace TLH
             var selectedCourse = GetUserSelection<Course>(response.Courses, "Select a classroom by entering its number:");
             return selectedCourse.Id;
         }
+
         public static string GetStudentsFromClassroom(string courseId)
         {
             var allStudents = new List<Student>();
@@ -107,16 +161,17 @@ namespace TLH
                 nextPageToken = response?.NextPageToken;
             } while (nextPageToken != null);
 
-
             var selectedStudent = GetUserSelection<Student>(allStudents, "Select a student by entering their number:");
             return selectedStudent.Profile.Id;
         }
+
         public static string GetEmailFromStudent(string studentId)
         {
             var request = GoogleApiHelper.ClassroomService.UserProfiles.Get(studentId);
             var response = request.Execute();
             return response.EmailAddress;
         }
+
         public static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
         {
             try
@@ -138,6 +193,7 @@ namespace TLH
                 return false;
             }
         }
+
         public static void PrintActiveStudentsInClassroom()
         {
             var courseId = SelectClassroomAndGetId();
@@ -149,6 +205,7 @@ namespace TLH
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
+
         public static IList<Student> GetActiveStudents(string courseId)
         {
             var allStudents = new List<Student>();
@@ -161,7 +218,7 @@ namespace TLH
                 request.PageToken = nextPageToken;
                 var response = request.Execute();
 
-                //allStudents.AddRange can be null we need too add exception handeling 
+                //allStudents.AddRange can be null we need too add exception handeling
                 try
                 {
                     allStudents.AddRange(response.Students);
@@ -176,6 +233,7 @@ namespace TLH
 
             return allStudents;
         }
+
         public static string GetCourseName(string courseId)
         {
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();

@@ -1,10 +1,13 @@
 ﻿using Google.Apis.Classroom.v1.Data;
 using System.Text.RegularExpressions;
 using TLH;
+
+//This class Creates all folders on the Local Computer for a Teachers classroom, courses, assignments and students.
 public class DirectoryManager
 {
     public const int MaxPathLength = 260;
     public const int MinFileNameLength = 5;
+
     public static string ShortenPath(string path, int maxLength = MaxPathLength)
     {
         if (path == null)
@@ -49,8 +52,7 @@ public class DirectoryManager
     }
     public static (string, bool) CreateDirectory(string parentDirectory, string folderName)
     {
-        var sanitizedFolderName = SanitizeFolderName(folderName);
-        var directoryPath = Path.Combine(parentDirectory, sanitizedFolderName);
+        var directoryPath = Path.Combine(parentDirectory, SanitizeFolderName(folderName));
 
         bool isNewlyCreated = !Directory.Exists(directoryPath);
         Directory.CreateDirectory(directoryPath);
@@ -59,14 +61,9 @@ public class DirectoryManager
     }
     public static string CreateStudentDirectoryOnDesktop()
     {
-        var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        var (userDirectory, _) = CreateDirectory(desktopPath, Environment.UserName);
+        Program.userPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var (userDirectory, _) = CreateDirectory(Program.userPathLocation, Environment.UserName);
         return userDirectory;
-    }
-    public static string GetCourseName(string courseId)
-    {
-        var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();
-        return SanitizeFolderName(course.Name);
     }
     public static string CreateStudentDirectory(string courseDirectory, Student student)
     {

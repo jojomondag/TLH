@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Download;
 using Google.Apis.Drive.v3;
+
 public static class DriveServiceExtensions
 {
     public static void DownloadWithStatus(this FilesResource.GetRequest request, MemoryStream memoryStream)
@@ -11,10 +12,12 @@ public static class DriveServiceExtensions
                 case DownloadStatus.Downloading:
                     Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
                     break;
+
                 case DownloadStatus.Completed:
                     Console.WriteLine($"Download complete: {request.FileId}");
                     memoryStream.Position = 0;
                     break;
+
                 case DownloadStatus.Failed:
                     Console.WriteLine($"Download failed: {request.FileId}");
                     break;
@@ -22,6 +25,7 @@ public static class DriveServiceExtensions
         };
         request.Download(memoryStream);
     }
+
     public static void DownloadWithStatus(this FilesResource.ExportRequest request, MemoryStream memoryStream)
     {
         request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
@@ -31,10 +35,12 @@ public static class DriveServiceExtensions
                 case DownloadStatus.Downloading:
                     Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
                     break;
+
                 case DownloadStatus.Completed:
                     Console.WriteLine($"Download complete: {request.FileId}");
                     memoryStream.Position = 0;
                     break;
+
                 case DownloadStatus.Failed:
                     Console.WriteLine($"Download failed: {request.FileId}");
                     break;

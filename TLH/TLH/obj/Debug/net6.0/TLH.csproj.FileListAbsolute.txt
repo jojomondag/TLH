@@ -55,3 +55,8 @@ C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\selenium-manager\ma
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\selenium-manager\windows\selenium-manager.exe
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\HtmlAgilityPack.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\WebDriver.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Python.Runtime.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\DocumentFormat.OpenXml.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\System.IO.Packaging.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\Interop.Microsoft.Office.Interop.Word.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\TLH.csproj.ResolveComReference.cache

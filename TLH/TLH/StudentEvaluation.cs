@@ -2,6 +2,8 @@
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using TLH;
+
+//This Class creates a Local Excel file with all the data Gathered from the folders crated on the Local Computer.
 public class StudentEvaluation
 {
     public static void LookForUserFolder()
@@ -72,28 +74,6 @@ public class StudentEvaluation
 
         return allAssignmentNamesByCourse;
     }
-    private static string GetCourseIdByClassName(string className)
-    {
-        var request = GoogleApiHelper.ClassroomService.Courses.List();
-        request.TeacherId = "me";
-        request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
-        var courses = request.Execute().Courses;
-
-        if (courses != null)
-        {
-            foreach (var course in courses)
-            {
-                if (course.Name == className)
-                {
-                    return course.Id;
-                }
-            }
-        }
-
-        // Return an empty string if no matching course is found
-        return string.Empty;
-    }
-
     public static void GenerateStudentAssignment(string mainFolderPath)
     {
         // Set the EPPlus license context to NonCommercial

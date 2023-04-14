@@ -56,6 +56,7 @@ namespace TLH
                 ApplicationName = "YourApplicationNameHere"
             });
         }
+
         public static void RefreshAccessToken(UserCredential credential)
         {
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
