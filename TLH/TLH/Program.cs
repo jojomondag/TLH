@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml;
+﻿using DocumentFormat.OpenXml;
 using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
 
@@ -11,59 +9,10 @@ namespace TLH
         public static string userPathLocation;
         private static void Main(string[] args)
         {
-            string stupid = "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";
-            run();
             userPathLocation = DirectoryManager.CreateStudentDirectoryOnDesktop();
             GoogleApiHelper.InitializeGoogleServices();
             Start();
         }
-        static void run()
-        {
-            // Create a new Word document
-            using (WordprocessingDocument doc = WordprocessingDocument.Create("my_document.docx", WordprocessingDocumentType.Document))
-            {
-                // Add a new main document part
-                MainDocumentPart mainPart = doc.AddMainDocumentPart();
-                mainPart.Document = new Document();
-
-                // Create a new StyleDefinitionsPart and add the default styles
-                StyleDefinitionsPart stylePart = mainPart.AddNewPart<StyleDefinitionsPart>();
-                Styles styles = new Styles();
-                stylePart.Styles = styles;
-                Style style = new Style()
-                {
-                    Type = StyleValues.Paragraph,
-                    StyleId = "Heading1",
-                    PrimaryStyle = new PrimaryStyle()
-                };
-
-                style.Append(new StyleName() { Val = "heading 1" });
-                style.Append(new BasedOn() { Val = "Normal" });
-                style.Append(new NextParagraphStyle() { Val = "Normal" });
-                style.Append(new LinkedStyle() { Val = "Heading1Char" });
-                style.Append(new UIPriority() { Val = 9 });
-                style.Append(new UnhideWhenUsed());
-                style.Append(new StyleRunProperties(new Bold(), new BoldComplexScript(), new FontSize() { Val = "28" }, new FontSizeComplexScript() { Val = "28" }));
-
-                styles.Append(style);
-
-                // Add a heading with the text "Josef" and apply a heading style
-                Body body = mainPart.Document.AppendChild(new Body());
-                Paragraph paragraph = body.AppendChild(new Paragraph());
-                Run run = paragraph.AppendChild(new Run());
-                run.AppendChild(new Text("Josef"));
-
-                // Apply the Heading 1 style
-                ParagraphProperties paragraphProperties = paragraph.AppendChild(new ParagraphProperties());
-                ParagraphStyleId paragraphStyleId = paragraphProperties.AppendChild(new ParagraphStyleId());
-                paragraphStyleId.Val = "Heading1";
-
-                // Save the document
-                mainPart.Document.Save();
-            }
-        }
-
-
         public static void Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
@@ -73,8 +22,8 @@ namespace TLH
             {
                 Console.WriteLine();
                 Console.WriteLine("Press 1 to select a classroom and download files.");
-                Console.WriteLine("Press 2 to evaluate student folders.");
-                Console.WriteLine("Press 3 to grade a student.");
+                Console.WriteLine("Press 2 to evaluate all student's"); 
+                Console.WriteLine("Press 3 to grade a course.");
                 Console.WriteLine("Press Escape to exit.");
                 var key = Console.ReadKey(true).Key;
 
@@ -83,21 +32,38 @@ namespace TLH
                     break;
                 }
 
-                var courseId = SelectClassroomAndGetId();
+                var courseId = "";
 
                 switch (key)
                 {
                     case ConsoleKey.D1:
+                        courseId = SelectClassroomAndGetId();
                         DownloadService.DownloadAllFilesFromClassroom(courseId);
                         break;
 
                     case ConsoleKey.D2:
+                        //have too fix connection too excel
                         StudentEvaluation.LookForUserFolder();
                         break;
 
                     case ConsoleKey.D3:
-                        StudentTextExtractor ste = new StudentTextExtractor();
-                        ste.ExtractTextFromStudentAssignments(courseId);
+                        //Step 1. Extract text from student assignments
+                        courseId = SelectClassroomAndGetId();
+                        var allStudentExtractedText = StudentEvaluation.GetAllUniqueExtractedText(courseId);
+
+                        //LoopThrough Tuple
+                        foreach (var student in allStudentExtractedText)
+                        {
+                            Console.WriteLine(student.Key);
+                            foreach (var assignment in student.Value)
+                            {
+                                Console.WriteLine(assignment.Item1);
+
+                                // Join the text strings and print them as a whole
+                                string wholeText = string.Join(Environment.NewLine, assignment.Item2);
+                                Console.WriteLine(wholeText);
+                            }
+                        }
 
                         break;
 
@@ -107,7 +73,6 @@ namespace TLH
                 }
             }
         }
-
         public static T GetUserSelection<T>(IList<T> items, string displayMessage)
         {
             Console.WriteLine();
@@ -144,7 +109,6 @@ namespace TLH
             var selectedCourse = GetUserSelection<Course>(response.Courses, "Select a classroom by entering its number:");
             return selectedCourse.Id;
         }
-
         public static string GetStudentsFromClassroom(string courseId)
         {
             var allStudents = new List<Student>();
@@ -164,14 +128,12 @@ namespace TLH
             var selectedStudent = GetUserSelection<Student>(allStudents, "Select a student by entering their number:");
             return selectedStudent.Profile.Id;
         }
-
         public static string GetEmailFromStudent(string studentId)
         {
             var request = GoogleApiHelper.ClassroomService.UserProfiles.Get(studentId);
             var response = request.Execute();
             return response.EmailAddress;
         }
-
         public static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
         {
             try
@@ -193,7 +155,6 @@ namespace TLH
                 return false;
             }
         }
-
         public static void PrintActiveStudentsInClassroom()
         {
             var courseId = SelectClassroomAndGetId();
@@ -205,7 +166,6 @@ namespace TLH
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
-
         public static IList<Student> GetActiveStudents(string courseId)
         {
             var allStudents = new List<Student>();
@@ -233,7 +193,6 @@ namespace TLH
 
             return allStudents;
         }
-
         public static string GetCourseName(string courseId)
         {
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();

@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[6.8.3, )"
             },
+            "DocX": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            },
             "DocumentFormat.OpenXml": {
               "target": "Package",
               "version": "[2.20.0, )"
@@ -87,6 +91,14 @@
             "Selenium.WebDriver.MicrosoftDriver": {
               "target": "Package",
               "version": "[17.17134.0, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "System.IO.Packaging": {
+              "target": "Package",
+              "version": "[4.7.0, )"
             },
             "pythonnet": {
               "target": "Package",

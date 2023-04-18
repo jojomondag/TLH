@@ -35,6 +35,21 @@
           }
         }
       },
+      "DocX/2.4.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Drawing.Common": "[5.0.2]",
+          "System.IO.Packaging": "[4.5.0]"
+        },
+        "compile": {
+          "lib/net5.0/Xceed.Document.NET5.dll": {},
+          "lib/net5.0/Xceed.Words.NET5.dll": {}
+        },
+        "runtime": {
+          "lib/net5.0/Xceed.Document.NET5.dll": {},
+          "lib/net5.0/Xceed.Words.NET5.dll": {}
+        }
+      },
       "EPPlus/6.2.0": {
         "type": "package",
         "dependencies": {
@@ -935,6 +950,25 @@
         "lib/netstandard1.3/DocumentFormat.OpenXml.xml",
         "lib/netstandard2.0/DocumentFormat.OpenXml.dll",
         "lib/netstandard2.0/DocumentFormat.OpenXml.xml"
+      ]
+    },
+    "DocX/2.4.0": {
+      "sha512": "c02FW0keXYEWJGqA0+5z10lm/GFYsutnXaiDC34l9mwHliAXc1y5NO3q4cawGfY34wgAhMgS1vC2mOi6zgGUqA==",
+      "type": "package",
+      "path": "docx/2.4.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "Xceed_Logo_Retina-400x400.png",
+        "docx.2.4.0.nupkg.sha512",
+        "docx.nuspec",
+        "lib/net40/Xceed.Document.NET.dll",
+        "lib/net40/Xceed.Words.NET.dll",
+        "lib/net5.0/Xceed.Document.NET5.dll",
+        "lib/net5.0/Xceed.Words.NET5.dll",
+        "tools/install.ps1"
       ]
     },
     "EPPlus/6.2.0": {
@@ -2636,6 +2670,7 @@
   "projectFileDependencyGroups": {
     "net6.0": [
       "Betalgo.OpenAI.GPT3 >= 6.8.3",
+      "DocX >= 2.4.0",
       "DocumentFormat.OpenXml >= 2.20.0",
       "EPPlus >= 6.2.0",
       "Google.Apis >= 1.60.0",
@@ -2646,6 +2681,8 @@
       "Selenium.WebDriver >= 4.8.2",
       "Selenium.WebDriver.ChromeDriver >= 112.0.5615.4900",
       "Selenium.WebDriver.MicrosoftDriver >= 17.17134.0",
+      "System.Drawing.Common >= 6.0.0",
+      "System.IO.Packaging >= 4.7.0",
       "pythonnet >= 3.0.1"
     ]
   },
@@ -2697,6 +2734,10 @@
             "target": "Package",
             "version": "[6.8.3, )"
           },
+          "DocX": {
+            "target": "Package",
+            "version": "[2.4.0, )"
+          },
           "DocumentFormat.OpenXml": {
             "target": "Package",
             "version": "[2.20.0, )"
@@ -2737,6 +2778,14 @@
             "target": "Package",
             "version": "[17.17134.0, )"
           },
+          "System.Drawing.Common": {
+            "target": "Package",
+            "version": "[6.0.0, )"
+          },
+          "System.IO.Packaging": {
+            "target": "Package",
+            "version": "[4.7.0, )"
+          },
           "pythonnet": {
             "target": "Package",
             "version": "[3.0.1, )"
@@ -2761,5 +2810,27 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1608",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Detected package version outside of dependency constraint: DocX 2.4.0 requires System.IO.Packaging (= 4.5.0) but version System.IO.Packaging 4.7.0 was resolved.",
+      "libraryId": "System.IO.Packaging",
+      "targetGraphs": [
+        "net6.0"
+      ]
+    },
+    {
+      "code": "NU1608",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Detected package version outside of dependency constraint: DocX 2.4.0 requires System.Drawing.Common (= 5.0.2) but version System.Drawing.Common 6.0.0 was resolved.",
+      "libraryId": "System.Drawing.Common",
+      "targetGraphs": [
+        "net6.0"
+      ]
+    }
+  ]
 }

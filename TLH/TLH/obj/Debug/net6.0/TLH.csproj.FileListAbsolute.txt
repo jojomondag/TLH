@@ -60,3 +60,5 @@ C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\DocumentFormat.Open
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\System.IO.Packaging.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\Interop.Microsoft.Office.Interop.Word.dll
 C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\obj\Debug\net6.0\TLH.csproj.ResolveComReference.cache
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Xceed.Document.NET5.dll
+C:\Users\Josef\Documents\GitHub\TLH\TLH\TLH\bin\Debug\net6.0\Xceed.Words.NET5.dll

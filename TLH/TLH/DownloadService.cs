@@ -35,7 +35,6 @@ namespace TLH
                 Console.WriteLine($"Error: {ex.Message}\nCourseId: {courseId}\nCourseWorkId: {courseWork.Id}\nStudentId: {student.UserId}");
             }
         }
-
         public static async void DownloadAttachments(string studentDirectory, StudentSubmission submission, Student student)
         {
             var attachments = submission.AssignmentSubmission?.Attachments;
@@ -102,7 +101,6 @@ namespace TLH
                 }
             }
         }
-
         public static void DownloadAttachment(string studentDirectory, Google.Apis.Drive.v3.Data.File driveFile, Student student, string attachmentId)
         {
             if (driveFile == null)
@@ -149,7 +147,6 @@ namespace TLH
                 SaveFile(memoryStream, filePath);
             }
         }
-
         public static void SaveFile(MemoryStream stream, string filePath)
         {
             var fileName = Path.GetFileName(filePath);
@@ -174,7 +171,6 @@ namespace TLH
                 stream.WriteTo(fileStream);
             }
         }
-
         public static void DownloadAllFilesFromClassroom(string courseId)
         {
             Console.WriteLine($"Attempting to download files from classroom with ID: {courseId}");

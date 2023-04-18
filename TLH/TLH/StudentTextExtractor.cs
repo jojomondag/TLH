@@ -1,22 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+﻿using Xceed.Words.NET;
+using System.Xml;
 
 namespace TLH
 {
     internal class StudentTextExtractor
     {
-        public void ExtractTextFromStudentAssignments(string courseId)
+        private Dictionary<string, Func<string, string>> fileHandlers;
+        public StudentTextExtractor()
+        {
+            fileHandlers = new Dictionary<string, Func<string, string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".cs", ExtractTextFromTxt },
+                { ".txt", ExtractTextFromTxt },
+                { ".java", ExtractTextFromTxt },
+                { ".js", ExtractTextFromTxt },
+                { ".py", ExtractTextFromTxt },
+                { ".cpp", ExtractTextFromTxt },
+                { ".docx", ExtractTextFromDocx }
+            };
+        }
+        public Dictionary<string, List<Tuple<bool, string, List<string>>>> ExtractTextFromStudentAssignments(string courseId)
         {
             var userDirectory = Program.userPathLocation;
             var courseName = Program.GetCourseName(courseId);
@@ -25,114 +28,110 @@ namespace TLH
             if (!Directory.Exists(courseFolderPath))
             {
                 Console.WriteLine("The specified course folder does not exist on the Desktop.");
-                return;
+                return null;
             }
 
             var students = Program.GetActiveStudents(courseId);
+            var extractedTextData = new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
 
             foreach (var student in students)
             {
                 var studentName = DirectoryManager.SanitizeFolderName(student.Profile.Name.FullName);
                 var studentFolderPath = Path.Combine(courseFolderPath, studentName);
-                var outputText = new StringBuilder();
+                var outputText = new List<Tuple<bool, string, List<string>>>();
 
                 foreach (var assignmentFolder in Directory.GetDirectories(studentFolderPath))
                 {
                     var assignmentName = Path.GetFileName(assignmentFolder);
-                    outputText.AppendLine($"{assignmentName}");
+                    var extractedTextList = new List<string>();
 
                     foreach (var filePath in Directory.GetFiles(assignmentFolder))
                     {
                         var extractedText = ExtractTextFromFile(filePath);
                         if (!string.IsNullOrEmpty(extractedText))
                         {
-                            outputText.AppendLine(extractedText);
+                            extractedTextList.Add(extractedText);
                         }
                     }
+
+                    outputText.Add(new Tuple<bool, string, List<string>>(true, assignmentName, extractedTextList));
                 }
 
-                // Save the extracted text to a Word file
                 var outputFileName = $"{studentName}_ExtractedText.docx";
                 var outputFileFullPath = Path.Combine(studentFolderPath, outputFileName);
-                SaveTextToWordFile(outputText.ToString(), outputFileFullPath);
+                SaveTextToWordFile(outputText, outputFileFullPath);
+
+                extractedTextData.Add(studentName, outputText);
             }
+            return extractedTextData;
         }
         private string ExtractTextFromFile(string filePath)
         {
-            if (Path.GetExtension(filePath).Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return File.ReadAllText(filePath);
+                string fileExtension = Path.GetExtension(filePath);
+
+                if (fileHandlers.TryGetValue(fileExtension, out var handler))
+                {
+                    return handler(filePath);
+                }
+                else
+                {
+                    Console.WriteLine($"Unsupported file format '{fileExtension}' for file '{filePath}'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while processing the file '{filePath}': {ex.Message}");
             }
 
             return string.Empty;
         }
-        private void SaveTextToWordFile(string text, string filePath)
+        private string ExtractTextFromTxt(string filePath)
         {
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            return File.ReadAllText(filePath);
+        }
+        private string ExtractTextFromDocx(string filePath)
+        {
+            using (DocX document = DocX.Load(filePath))
             {
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-                mainPart.Document = new Document();
-                Body body = mainPart.Document.AppendChild(new Body());
-
-                // Add style definitions part and include Heading 1 style
-                AddStyleDefinitionsPart(mainPart);
-
-                // Split text by lines
-                string[] lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-
-                // Create a paragraph for each line
-                foreach (string line in lines)
+                return document.Text;
+            }
+        }
+        private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
+        {
+            // Create a new document.
+            using (DocX document = DocX.Create(filePath))
+            {
+                // Iterate through each tuple in the text data
+                foreach (var tuple in textData)
                 {
-                    if (line.StartsWith("===== ") && line.EndsWith(" ====="))
+                    if (tuple.Item1)
                     {
                         // Create a Heading 1 paragraph for the assignment name
-                        string assignmentName = line.Substring(6, line.Length - 12);
-                        Paragraph headingPara = body.AppendChild(new Paragraph());
-                        Run headingRun = headingPara.AppendChild(new Run());
-                        headingRun.AppendChild(new Text(assignmentName));
+                        string validAssignmentName = RemoveInvalidXmlChars(tuple.Item2);
+                        Xceed.Document.NET.Paragraph headingPara = document.InsertParagraph(validAssignmentName);
+                        headingPara.StyleName = "Heading1";
 
-                        // Apply Heading 1 style
-                        ParagraphProperties headingParaProps = headingPara.AppendChild(new ParagraphProperties());
-                        headingParaProps.ParagraphStyleId = new ParagraphStyleId() { Val = "Heading1" };
-                    }
-                    else
-                    {
-                        // Create a paragraph for the normal line
-                        Paragraph para = body.AppendChild(new Paragraph());
-                        Run run = para.AppendChild(new Run());
-                        run.AppendChild(new Text(line));
+                        // Create a paragraph for each line in the extracted text list
+                        foreach (var line in tuple.Item3)
+                        {
+                            string validLine = RemoveInvalidXmlChars(line);
+                            document.InsertParagraph(validLine);
+                        }
                     }
                 }
 
-                mainPart.Document.Save();
+                // Save the document.
+                document.Save();
             }
+
+            Console.WriteLine("Document created successfully.");
         }
-        private void AddStyleDefinitionsPart(MainDocumentPart mainPart)
+        private string RemoveInvalidXmlChars(string input)
         {
-            StyleDefinitionsPart styleDefinitionsPart = mainPart.AddNewPart<StyleDefinitionsPart>();
-            Styles styles = new Styles();
-
-            // Create the built-in Heading 1 style
-            Style heading1Style = new Style()
-            {
-                Type = StyleValues.Paragraph,
-                StyleId = "Heading1",
-                CustomStyle = true
-            };
-
-            // Set the Heading 1 style properties
-            StyleRunProperties heading1RunProps = new StyleRunProperties();
-            RunFonts runFonts = new RunFonts { Ascii = "Arial", HighAnsi = "Arial", EastAsia = "Arial", ComplexScript = "Arial" };
-            heading1RunProps.Append(runFonts);
-            heading1RunProps.Append(new Bold());
-            heading1RunProps.Append(new FontSize() { Val = "28" }); // 14pt font size
-            heading1RunProps.Append(new Color { Val = "365F91" }); // Set a custom color
-            heading1Style.Append(heading1RunProps);
-
-            styles.Append(heading1Style);
-
-            // Add the styles to the style definitions part
-            styleDefinitionsPart.Styles = styles;
+            var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();
+            return new string(validXmlChars);
         }
     }
 }

@@ -9,6 +9,7 @@
       "TLH/1.0.0": {
         "dependencies": {
           "Betalgo.OpenAI.GPT3": "6.8.3",
+          "DocX": "2.4.0",
           "DocumentFormat.OpenXml": "2.20.0",
           "EPPlus": "6.2.0",
           "Google.Apis": "1.60.0",
@@ -19,6 +20,8 @@
           "Selenium.WebDriver": "4.8.2",
           "Selenium.WebDriver.ChromeDriver": "112.0.5615.4900",
           "Selenium.WebDriver.MicrosoftDriver": "17.17134.0",
+          "System.Drawing.Common": "6.0.0",
+          "System.IO.Packaging": "4.7.0",
           "pythonnet": "3.0.1"
         },
         "runtime": {
@@ -45,6 +48,22 @@
           "lib/net6.0/DocumentFormat.OpenXml.dll": {
             "assemblyVersion": "2.20.0.0",
             "fileVersion": "2.20.0.0"
+          }
+        }
+      },
+      "DocX/2.4.0": {
+        "dependencies": {
+          "System.Drawing.Common": "6.0.0",
+          "System.IO.Packaging": "4.7.0"
+        },
+        "runtime": {
+          "lib/net5.0/Xceed.Document.NET5.dll": {
+            "assemblyVersion": "2.4.0.0",
+            "fileVersion": "2.4.0.0"
+          },
+          "lib/net5.0/Xceed.Words.NET5.dll": {
+            "assemblyVersion": "2.4.0.0",
+            "fileVersion": "2.4.0.0"
           }
         }
       },
@@ -563,6 +582,13 @@
       "sha512": "sha512-+oFMsEppo/W6KpGTRXaJl2jTFYn9zeon4FaZuDoCijQ1/0JaPENaCef7d4Y3f8v116eKhVBwd4Ya+/NDglxkjw==",
       "path": "documentformat.openxml/2.20.0",
       "hashPath": "documentformat.openxml.2.20.0.nupkg.sha512"
+    },
+    "DocX/2.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-c02FW0keXYEWJGqA0+5z10lm/GFYsutnXaiDC34l9mwHliAXc1y5NO3q4cawGfY34wgAhMgS1vC2mOi6zgGUqA==",
+      "path": "docx/2.4.0",
+      "hashPath": "docx.2.4.0.nupkg.sha512"
     },
     "EPPlus/6.2.0": {
       "type": "package",

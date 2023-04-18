@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Download;
 using Google.Apis.Drive.v3;
-
 public static class DriveServiceExtensions
 {
     public static void DownloadWithStatus(this FilesResource.GetRequest request, MemoryStream memoryStream)
@@ -25,7 +24,6 @@ public static class DriveServiceExtensions
         };
         request.Download(memoryStream);
     }
-
     public static void DownloadWithStatus(this FilesResource.ExportRequest request, MemoryStream memoryStream)
     {
         request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>

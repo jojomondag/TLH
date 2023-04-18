@@ -4,7 +4,7 @@ using OfficeOpenXml.Style;
 using TLH;
 
 //This Class creates a Local Excel file with all the data Gathered from the folders crated on the Local Computer.
-public class StudentEvaluation
+public static class StudentEvaluation
 {
     public static void LookForUserFolder()
     {
@@ -73,6 +73,16 @@ public class StudentEvaluation
         }
 
         return allAssignmentNamesByCourse;
+    }
+    public static Dictionary<string, List<Tuple<bool, string, List<string>>>> GetAllUniqueExtractedText(string courseId)
+    {
+        // Create an instance of the StudentTextExtractor class
+        var studentTextExtractor = new StudentTextExtractor();
+
+        // Call the ExtractTextFromStudentAssignments method
+        var extractedTextData = studentTextExtractor.ExtractTextFromStudentAssignments(courseId);
+
+        return extractedTextData;
     }
     public static void GenerateStudentAssignment(string mainFolderPath)
     {
