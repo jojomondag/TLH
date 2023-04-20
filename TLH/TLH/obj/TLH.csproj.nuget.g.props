@@ -13,6 +13,9 @@
     <SourceRoot Include="C:\Users\Josef\.nuget\packages\" />
     <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
   </ItemGroup>
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.props" Condition="Exists('$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.props')" />
+  </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgDocX Condition=" '$(PkgDocX)' == '' ">C:\Users\Josef\.nuget\packages\docx\2.4.0</PkgDocX>
   </PropertyGroup>

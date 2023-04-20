@@ -4,5 +4,7 @@
     <Import Project="$(NuGetPackageRoot)selenium.webdriver.microsoftdriver\17.17134.0\build\Selenium.WebDriver.MicrosoftDriver.targets" Condition="Exists('$(NuGetPackageRoot)selenium.webdriver.microsoftdriver\17.17134.0\build\Selenium.WebDriver.MicrosoftDriver.targets')" />
     <Import Project="$(NuGetPackageRoot)selenium.webdriver.chromedriver\112.0.5615.4900\build\Selenium.WebDriver.ChromeDriver.targets" Condition="Exists('$(NuGetPackageRoot)selenium.webdriver.chromedriver\112.0.5615.4900\build\Selenium.WebDriver.ChromeDriver.targets')" />
     <Import Project="$(NuGetPackageRoot)selenium.webdriver\4.8.2\buildTransitive\Selenium.WebDriver.targets" Condition="Exists('$(NuGetPackageRoot)selenium.webdriver\4.8.2\buildTransitive\Selenium.WebDriver.targets')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.ml.onnxruntime.managed\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.ml.onnxruntime.managed\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.Managed.targets')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.ml.onnxruntime\1.14.1\build\netstandard2.0\Microsoft.ML.OnnxRuntime.targets')" />
   </ImportGroup>
 </Project>

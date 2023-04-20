@@ -44,6 +44,10 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "AI.Dev.OpenAI.GPT": {
+              "target": "Package",
+              "version": "[1.0.2, )"
+            },
             "Betalgo.OpenAI.GPT3": {
               "target": "Package",
               "version": "[6.8.3, )"
@@ -59,6 +63,10 @@
             "EPPlus": {
               "target": "Package",
               "version": "[6.2.0, )"
+            },
+            "GPT-3-Encoder-Sharp": {
+              "target": "Package",
+              "version": "[1.0.0, )"
             },
             "Google.Apis": {
               "target": "Package",
@@ -76,6 +84,10 @@
               "target": "Package",
               "version": "[1.11.46, )"
             },
+            "Microsoft.ML.OnnxRuntime": {
+              "target": "Package",
+              "version": "[1.14.1, )"
+            },
             "Python.Runtime": {
               "target": "Package",
               "version": "[2.7.9, )"
@@ -91,6 +103,10 @@
             "Selenium.WebDriver.MicrosoftDriver": {
               "target": "Package",
               "version": "[17.17134.0, )"
+            },
+            "SharpToken": {
+              "target": "Package",
+              "version": "[1.0.26, )"
             },
             "System.Drawing.Common": {
               "target": "Package",
@@ -121,7 +137,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
         }
       }
     }

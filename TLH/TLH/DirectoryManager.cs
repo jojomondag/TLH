@@ -7,7 +7,6 @@ public class DirectoryManager
 {
     public const int MaxPathLength = 260;
     public const int MinFileNameLength = 5;
-
     public static string ShortenPath(string path, int maxLength = MaxPathLength)
     {
         if (path == null)

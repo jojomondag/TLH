@@ -4,7 +4,6 @@
 	ett wordocument med texten exempel Alexander Ljungdahl_ExtractedText.docx
 
 
-
 	2. Vi kommer att mata openai med denna text. Vi kommer behöva bryta upp texten, så att vi inte överstiger de tillåtna tecknen, som en prompt till openai får ha.
 
 	4. Efter att vi har samlat ihop allt material så skall vi kunna bedöma eleven. Materialet som vi sammlar ihop är.

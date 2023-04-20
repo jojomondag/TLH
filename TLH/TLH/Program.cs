@@ -1,19 +1,26 @@
 ﻿using DocumentFormat.OpenXml;
 using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
+using GPT3Example;
+using OpenAI.GPT3.Interfaces;
+using TLH.Data;
 
 namespace TLH
 {
     public static class Program
     {
-        public static string userPathLocation;
+        public static string ?userPathLocation;
         private static void Main(string[] args)
         {
             userPathLocation = DirectoryManager.CreateStudentDirectoryOnDesktop();
             GoogleApiHelper.InitializeGoogleServices();
-            Start();
+            MainAsync().GetAwaiter().GetResult(); // Call MainAsync from Main
         }
-        public static void Start()
+        private static async Task MainAsync() // Create a separate async method
+        {
+            await Start();
+        }
+        public static async Task Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
             Console.WriteLine("Press Escape to exit the program at any time.");
@@ -47,6 +54,15 @@ namespace TLH
                         break;
 
                     case ConsoleKey.D3:
+
+                        Console.WriteLine("What should i count?");
+                        string countThis = Console.ReadLine();
+
+                        TokenCounters.openaitools(countThis);
+                        TokenCounters.GPT3EncoderSharp(countThis);
+                        TokenCounters.SharpTopkenCounter(countThis);
+
+                        Prooompting.CalculateTokens();
                         //Step 1. Extract text from student assignments
                         courseId = SelectClassroomAndGetId();
                         var allStudentExtractedText = StudentEvaluation.GetAllUniqueExtractedText(courseId);
@@ -64,6 +80,17 @@ namespace TLH
                                 Console.WriteLine(wholeText);
                             }
                         }
+
+
+                        // Create an instance of the OpenAiApiHelper class
+                        var openAiApiHelper = new OpenAiApiHelper();
+
+                        // Call the ConnectAsync() method to get an instance of IOpenAIService
+                        IOpenAIService openAiService = await openAiApiHelper.ConnectAsync();
+
+                        // Pass the IOpenAIService instance to the RunSimpleCompletionStreamTest() method
+                        await OpenAiApiHelper.RunSimpleCompletionStreamTest(openAiService);
+
 
                         break;
 

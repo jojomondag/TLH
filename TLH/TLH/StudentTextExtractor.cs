@@ -5,7 +5,6 @@ namespace TLH
 {
     internal class StudentTextExtractor
     {
-        private Dictionary<string, Func<string, string>> fileHandlers;
         public StudentTextExtractor()
         {
             fileHandlers = new Dictionary<string, Func<string, string>>(StringComparer.OrdinalIgnoreCase)
@@ -19,6 +18,7 @@ namespace TLH
                 { ".docx", ExtractTextFromDocx }
             };
         }
+        private Dictionary<string, Func<string, string>> fileHandlers;
         public Dictionary<string, List<Tuple<bool, string, List<string>>>> ExtractTextFromStudentAssignments(string courseId)
         {
             var userDirectory = Program.userPathLocation;

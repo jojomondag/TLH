@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net6.0": {
+      "AI.Dev.OpenAI.GPT/1.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/AI.Dev.OpenAI.GPT.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/AI.Dev.OpenAI.GPT.dll": {}
+        }
+      },
       "Betalgo.OpenAI.GPT3/6.8.3": {
         "type": "package",
         "dependencies": {
@@ -176,6 +185,15 @@
           "lib/netstandard2.0/Google.Apis.Drive.v3.dll": {
             "related": ".pdb;.xml"
           }
+        }
+      },
+      "GPT-3-Encoder-Sharp/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/GPT-3-Encoder-Sharp.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/GPT-3-Encoder-Sharp.dll": {}
         }
       },
       "HtmlAgilityPack/1.11.46": {
@@ -505,6 +523,181 @@
           }
         }
       },
+      "Microsoft.ML.OnnxRuntime/1.14.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.ML.OnnxRuntime.Managed": "1.14.1"
+        },
+        "build": {
+          "build/netstandard2.0/Microsoft.ML.OnnxRuntime.props": {},
+          "build/netstandard2.0/Microsoft.ML.OnnxRuntime.targets": {}
+        },
+        "runtimeTargets": {
+          "runtimes/android/native/onnxruntime.aar": {
+            "assetType": "native",
+            "rid": "android"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/Info.plist": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/coreml_provider_factory.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/cpu_provider_factory.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_c_api.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_cxx_api.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_cxx_inline.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Info.plist": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/coreml_provider_factory.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/cpu_provider_factory.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_c_api.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_cxx_api.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_cxx_inline.h": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Info.plist": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/onnxruntime": {
+            "assetType": "native",
+            "rid": "ios"
+          },
+          "runtimes/linux-arm64/native/libonnxruntime.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-x64/native/libonnxruntime.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/osx.10.14-arm64/native/libonnxruntime.dylib": {
+            "assetType": "native",
+            "rid": "osx.10.14-arm64"
+          },
+          "runtimes/osx.10.14-x64/native/libonnxruntime.dylib": {
+            "assetType": "native",
+            "rid": "osx.10.14-x64"
+          },
+          "runtimes/win-arm/native/onnxruntime.dll": {
+            "assetType": "native",
+            "rid": "win-arm"
+          },
+          "runtimes/win-arm/native/onnxruntime.lib": {
+            "assetType": "native",
+            "rid": "win-arm"
+          },
+          "runtimes/win-arm/native/onnxruntime_providers_shared.dll": {
+            "assetType": "native",
+            "rid": "win-arm"
+          },
+          "runtimes/win-arm/native/onnxruntime_providers_shared.lib": {
+            "assetType": "native",
+            "rid": "win-arm"
+          },
+          "runtimes/win-arm64/native/onnxruntime.dll": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-arm64/native/onnxruntime.lib": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-arm64/native/onnxruntime_providers_shared.dll": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-arm64/native/onnxruntime_providers_shared.lib": {
+            "assetType": "native",
+            "rid": "win-arm64"
+          },
+          "runtimes/win-x64/native/onnxruntime.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x64/native/onnxruntime.lib": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x64/native/onnxruntime_providers_shared.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x64/native/onnxruntime_providers_shared.lib": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/onnxruntime.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          },
+          "runtimes/win-x86/native/onnxruntime.lib": {
+            "assetType": "native",
+            "rid": "win-x86"
+          },
+          "runtimes/win-x86/native/onnxruntime_providers_shared.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          },
+          "runtimes/win-x86/native/onnxruntime_providers_shared.lib": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "Microsoft.ML.OnnxRuntime.Managed/1.14.1": {
+        "type": "package",
+        "dependencies": {
+          "System.Memory": "4.5.3"
+        },
+        "compile": {
+          "lib/net6.0/Microsoft.ML.OnnxRuntime.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.ML.OnnxRuntime.dll": {
+            "related": ".pdb"
+          }
+        },
+        "build": {
+          "build/netstandard2.0/Microsoft.ML.OnnxRuntime.Managed.targets": {}
+        }
+      },
       "Microsoft.NETCore.Platforms/1.1.0": {
         "type": "package",
         "compile": {
@@ -605,6 +798,15 @@
           "build/Selenium.WebDriver.MicrosoftDriver.targets": {}
         }
       },
+      "SharpToken/1.0.26": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/SharpToken.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/SharpToken.dll": {}
+        }
+      },
       "System.Diagnostics.DiagnosticSource/6.0.0": {
         "type": "package",
         "dependencies": {
@@ -695,6 +897,15 @@
           "lib/netstandard2.0/System.IO.Packaging.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "System.Memory/4.5.3": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.1/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/_._": {}
         }
       },
       "System.Reflection/4.3.0": {
@@ -911,6 +1122,20 @@
     }
   },
   "libraries": {
+    "AI.Dev.OpenAI.GPT/1.0.2": {
+      "sha512": "GUcOzQACCRLBAY4yasURBZY4WxjfniRz9K37Vyyj8DGCdYnBPaIWzBuXh8BXxQOQCcjqfAZWcQynPDaeoqUYAQ==",
+      "type": "package",
+      "path": "ai.dev.openai.gpt/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ai.dev.openai.gpt.1.0.2.nupkg.sha512",
+        "ai.dev.openai.gpt.nuspec",
+        "lib/net5.0/AI.Dev.OpenAI.GPT.dll",
+        "lib/net6.0/AI.Dev.OpenAI.GPT.dll",
+        "lib/netcoreapp3.1/AI.Dev.OpenAI.GPT.dll"
+      ]
+    },
     "Betalgo.OpenAI.GPT3/6.8.3": {
       "sha512": "2IiZWvWUJdsFjH8K+bV/cBqprAHlUHWrE0o7ioOUmkaXFSYdlxS+uMP5SYXOM9GLoigzNeVGDpndGox+MCbfwQ==",
       "type": "package",
@@ -1154,6 +1379,19 @@
         "lib/netstandard2.0/Google.Apis.Drive.v3.dll",
         "lib/netstandard2.0/Google.Apis.Drive.v3.pdb",
         "lib/netstandard2.0/Google.Apis.Drive.v3.xml"
+      ]
+    },
+    "GPT-3-Encoder-Sharp/1.0.0": {
+      "sha512": "2Tk+q8V9S26UMd/VVMpLAFPBuiRPl+LB35V6CCUUyi6RqH6tO1iSz11hmqlbDlwu8xXUZ7NgORElseA8mV3J0Q==",
+      "type": "package",
+      "path": "gpt-3-encoder-sharp/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "gpt-3-encoder-sharp.1.0.0.nupkg.sha512",
+        "gpt-3-encoder-sharp.nuspec",
+        "lib/net6.0/GPT-3-Encoder-Sharp.dll"
       ]
     },
     "HtmlAgilityPack/1.11.46": {
@@ -1668,6 +1906,118 @@
         "microsoft.io.recyclablememorystream.nuspec"
       ]
     },
+    "Microsoft.ML.OnnxRuntime/1.14.1": {
+      "sha512": "6tCB0S2lPh1ztFZeBtCNLKdc1Fj+DapzQZBtRiEOb1H6LEgGPS7bGWjI/FnfztoOPCOKffgwzly/OmNP7y0dzQ==",
+      "type": "package",
+      "path": "microsoft.ml.onnxruntime/1.14.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "ORT_icon_for_light_bg.png",
+        "Privacy.md",
+        "ThirdPartyNotices.txt",
+        "build/monoandroid11.0/Microsoft.ML.OnnxRuntime.targets",
+        "build/native/Microsoft.ML.OnnxRuntime.props",
+        "build/native/Microsoft.ML.OnnxRuntime.targets",
+        "build/native/include/cpu_provider_factory.h",
+        "build/native/include/onnxruntime_c_api.h",
+        "build/native/include/onnxruntime_cxx_api.h",
+        "build/native/include/onnxruntime_cxx_inline.h",
+        "build/native/include/onnxruntime_run_options_config_keys.h",
+        "build/native/include/onnxruntime_session_options_config_keys.h",
+        "build/native/include/provider_options.h",
+        "build/net6.0-android31.0/Microsoft.ML.OnnxRuntime.targets",
+        "build/net6.0-ios15.4/Microsoft.ML.OnnxRuntime.targets",
+        "build/net6.0-macos12.3/Microsoft.ML.OnnxRuntime.targets",
+        "build/netstandard1.1/Microsoft.ML.OnnxRuntime.props",
+        "build/netstandard1.1/Microsoft.ML.OnnxRuntime.targets",
+        "build/netstandard2.0/Microsoft.ML.OnnxRuntime.props",
+        "build/netstandard2.0/Microsoft.ML.OnnxRuntime.targets",
+        "build/xamarinios10/Microsoft.ML.OnnxRuntime.targets",
+        "buildTransitive/monoandroid11.0/Microsoft.ML.OnnxRuntime.targets",
+        "buildTransitive/net6.0-android31.0/Microsoft.ML.OnnxRuntime.targets",
+        "buildTransitive/net6.0-ios15.4/Microsoft.ML.OnnxRuntime.targets",
+        "buildTransitive/net6.0-macos12.3/Microsoft.ML.OnnxRuntime.targets",
+        "buildTransitive/xamarinios10/Microsoft.ML.OnnxRuntime.targets",
+        "microsoft.ml.onnxruntime.1.14.1.nupkg.sha512",
+        "microsoft.ml.onnxruntime.nuspec",
+        "runtimes/android/native/onnxruntime.aar",
+        "runtimes/ios/native/onnxruntime.xcframework/Info.plist",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/coreml_provider_factory.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/cpu_provider_factory.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_c_api.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_cxx_api.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Headers/onnxruntime_cxx_inline.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/Info.plist",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64/onnxruntime.framework/onnxruntime",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/coreml_provider_factory.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/cpu_provider_factory.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_c_api.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_cxx_api.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Headers/onnxruntime_cxx_inline.h",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/Info.plist",
+        "runtimes/ios/native/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.framework/onnxruntime",
+        "runtimes/linux-arm64/native/libonnxruntime.so",
+        "runtimes/linux-x64/native/libonnxruntime.so",
+        "runtimes/osx.10.14-arm64/native/libonnxruntime.dylib",
+        "runtimes/osx.10.14-x64/native/libonnxruntime.dylib",
+        "runtimes/win-arm/native/onnxruntime.dll",
+        "runtimes/win-arm/native/onnxruntime.lib",
+        "runtimes/win-arm/native/onnxruntime_providers_shared.dll",
+        "runtimes/win-arm/native/onnxruntime_providers_shared.lib",
+        "runtimes/win-arm64/native/onnxruntime.dll",
+        "runtimes/win-arm64/native/onnxruntime.lib",
+        "runtimes/win-arm64/native/onnxruntime_providers_shared.dll",
+        "runtimes/win-arm64/native/onnxruntime_providers_shared.lib",
+        "runtimes/win-x64/native/onnxruntime.dll",
+        "runtimes/win-x64/native/onnxruntime.lib",
+        "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
+        "runtimes/win-x64/native/onnxruntime_providers_shared.lib",
+        "runtimes/win-x86/native/onnxruntime.dll",
+        "runtimes/win-x86/native/onnxruntime.lib",
+        "runtimes/win-x86/native/onnxruntime_providers_shared.dll",
+        "runtimes/win-x86/native/onnxruntime_providers_shared.lib"
+      ]
+    },
+    "Microsoft.ML.OnnxRuntime.Managed/1.14.1": {
+      "sha512": "Htm4aJu0qO6cdf/UGH+7s3ue8bZX02CyH/fmenBQvUJAXswbLmUInV5eduU+/kwT58uN3ilAJFnWSXbH7EKgYg==",
+      "type": "package",
+      "path": "microsoft.ml.onnxruntime.managed/1.14.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "ORT_icon_for_light_bg.png",
+        "Privacy.md",
+        "ThirdPartyNotices.txt",
+        "build/netstandard1.1/Microsoft.ML.OnnxRuntime.Managed.targets",
+        "build/netstandard2.0/Microsoft.ML.OnnxRuntime.Managed.targets",
+        "lib/monoandroid11.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/monoandroid11.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/net5.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/net5.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/net6.0-android31.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/net6.0-android31.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/net6.0-android31.0/Microsoft.ML.OnnxRuntime.xml",
+        "lib/net6.0-ios16.1/Microsoft.ML.OnnxRuntime.dll",
+        "lib/net6.0-ios16.1/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/net6.0-macos13.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/net6.0-macos13.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/net6.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/net6.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/netcoreapp3.1/Microsoft.ML.OnnxRuntime.dll",
+        "lib/netcoreapp3.1/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/netstandard1.1/Microsoft.ML.OnnxRuntime.dll",
+        "lib/netstandard1.1/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/netstandard2.0/Microsoft.ML.OnnxRuntime.dll",
+        "lib/netstandard2.0/Microsoft.ML.OnnxRuntime.pdb",
+        "lib/xamarinios10/Microsoft.ML.OnnxRuntime.dll",
+        "lib/xamarinios10/Microsoft.ML.OnnxRuntime.pdb",
+        "microsoft.ml.onnxruntime.managed.1.14.1.nupkg.sha512",
+        "microsoft.ml.onnxruntime.managed.nuspec"
+      ]
+    },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "sha512": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
       "type": "package",
@@ -1840,6 +2190,21 @@
         "driver/MicrosoftWebDriver.exe",
         "selenium.webdriver.microsoftdriver.17.17134.0.nupkg.sha512",
         "selenium.webdriver.microsoftdriver.nuspec"
+      ]
+    },
+    "SharpToken/1.0.26": {
+      "sha512": "5KZyM0N+c1TwQx/IY+dWXe+WWxT884tVdFMHQ+SPMxnLugxPl+G/jvrIX9CZpdhT4phLCO4GxGD0SJyK4L0EsQ==",
+      "type": "package",
+      "path": "sharptoken/1.0.26",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "lib/net6.0/SharpToken.dll",
+        "lib/netstandard2.1/SharpToken.dll",
+        "sharptoken.1.0.26.nupkg.sha512",
+        "sharptoken.nuspec"
       ]
     },
     "System.Diagnostics.DiagnosticSource/6.0.0": {
@@ -2033,6 +2398,27 @@
         "ref/netstandard2.0/System.IO.Packaging.xml",
         "system.io.packaging.4.7.0.nupkg.sha512",
         "system.io.packaging.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
+    "System.Memory/4.5.3": {
+      "sha512": "3oDzvc/zzetpTKWMShs1AADwZjQ/36HnsufHRPcOjyRAAMLDlu2iD33MBI2opxnezcVUtXyqDXXjoFMOU9c7SA==",
+      "type": "package",
+      "path": "system.memory/4.5.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/netcoreapp2.1/_._",
+        "lib/netstandard1.1/System.Memory.dll",
+        "lib/netstandard1.1/System.Memory.xml",
+        "lib/netstandard2.0/System.Memory.dll",
+        "lib/netstandard2.0/System.Memory.xml",
+        "ref/netcoreapp2.1/_._",
+        "system.memory.4.5.3.nupkg.sha512",
+        "system.memory.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
       ]
@@ -2669,18 +3055,22 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
+      "AI.Dev.OpenAI.GPT >= 1.0.2",
       "Betalgo.OpenAI.GPT3 >= 6.8.3",
       "DocX >= 2.4.0",
       "DocumentFormat.OpenXml >= 2.20.0",
       "EPPlus >= 6.2.0",
+      "GPT-3-Encoder-Sharp >= 1.0.0",
       "Google.Apis >= 1.60.0",
       "Google.Apis.Classroom.v1 >= 1.60.0.3001",
       "Google.Apis.Drive.v3 >= 1.60.0.2986",
       "HtmlAgilityPack >= 1.11.46",
+      "Microsoft.ML.OnnxRuntime >= 1.14.1",
       "Python.Runtime >= 2.7.9",
       "Selenium.WebDriver >= 4.8.2",
       "Selenium.WebDriver.ChromeDriver >= 112.0.5615.4900",
       "Selenium.WebDriver.MicrosoftDriver >= 17.17134.0",
+      "SharpToken >= 1.0.26",
       "System.Drawing.Common >= 6.0.0",
       "System.IO.Packaging >= 4.7.0",
       "pythonnet >= 3.0.1"
@@ -2730,6 +3120,10 @@
       "net6.0": {
         "targetAlias": "net6.0",
         "dependencies": {
+          "AI.Dev.OpenAI.GPT": {
+            "target": "Package",
+            "version": "[1.0.2, )"
+          },
           "Betalgo.OpenAI.GPT3": {
             "target": "Package",
             "version": "[6.8.3, )"
@@ -2745,6 +3139,10 @@
           "EPPlus": {
             "target": "Package",
             "version": "[6.2.0, )"
+          },
+          "GPT-3-Encoder-Sharp": {
+            "target": "Package",
+            "version": "[1.0.0, )"
           },
           "Google.Apis": {
             "target": "Package",
@@ -2762,6 +3160,10 @@
             "target": "Package",
             "version": "[1.11.46, )"
           },
+          "Microsoft.ML.OnnxRuntime": {
+            "target": "Package",
+            "version": "[1.14.1, )"
+          },
           "Python.Runtime": {
             "target": "Package",
             "version": "[2.7.9, )"
@@ -2777,6 +3179,10 @@
           "Selenium.WebDriver.MicrosoftDriver": {
             "target": "Package",
             "version": "[17.17134.0, )"
+          },
+          "SharpToken": {
+            "target": "Package",
+            "version": "[1.0.26, )"
           },
           "System.Drawing.Common": {
             "target": "Package",
@@ -2807,7 +3213,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
       }
     }
   },
