@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml;
-using Google.Apis.Classroom.v1;
+﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
 using GPT3Example;
 using OpenAI.GPT3.Interfaces;
@@ -9,17 +8,23 @@ namespace TLH
 {
     public static class Program
     {
-        public static string ?userPathLocation;
-        private static void Main(string[] args)
+        public static string? userPathLocation;
+
+        private static async Task Main(string[] args)
         {
-            userPathLocation = DirectoryManager.CreateStudentDirectoryOnDesktop();
+            userPathLocation = DirectoryManager.CreateUserDirectoryOnDesktop();
             GoogleApiHelper.InitializeGoogleServices();
+<<<<<<< HEAD
+            await Start(); // Use await here
+=======
             MainAsync().GetAwaiter().GetResult(); // Call MainAsync from Main
         }
         private static async Task MainAsync() // Create a separate async method
         {
             await Start();
+>>>>>>> parent of e421557 (Teacher download files)
         }
+
         public static async Task Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");
@@ -29,7 +34,7 @@ namespace TLH
             {
                 Console.WriteLine();
                 Console.WriteLine("Press 1 to select a classroom and download files.");
-                Console.WriteLine("Press 2 to evaluate all student's"); 
+                Console.WriteLine("Press 2 to evaluate all student's");
                 Console.WriteLine("Press 3 to grade a course.");
                 Console.WriteLine("Press Escape to exit.");
                 var key = Console.ReadKey(true).Key;
@@ -45,7 +50,13 @@ namespace TLH
                 {
                     case ConsoleKey.D1:
                         courseId = SelectClassroomAndGetId();
-                        DownloadService.DownloadAllFilesFromClassroom(courseId);
+
+                        if (!string.IsNullOrEmpty(courseId))
+                        {
+                            await DownloadService.DownloadAllFilesFromClassroom(courseId); // Use await here
+                            Console.WriteLine("Press Enter to continue.");
+                            Console.ReadLine();
+                        }
                         break;
 
                     case ConsoleKey.D2:
@@ -54,32 +65,17 @@ namespace TLH
                         break;
 
                     case ConsoleKey.D3:
+                        // ...
 
-                        Console.WriteLine("What should i count?");
-                        string countThis = Console.ReadLine();
-
-                        TokenCounters.openaitools(countThis);
-                        TokenCounters.GPT3EncoderSharp(countThis);
-                        TokenCounters.SharpTopkenCounter(countThis);
-
-                        Prooompting.CalculateTokens();
-                        //Step 1. Extract text from student assignments
                         courseId = SelectClassroomAndGetId();
-                        var allStudentExtractedText = StudentEvaluation.GetAllUniqueExtractedText(courseId);
-
-                        //LoopThrough Tuple
-                        foreach (var student in allStudentExtractedText)
+                        if (!string.IsNullOrEmpty(courseId))
                         {
-                            Console.WriteLine(student.Key);
-                            foreach (var assignment in student.Value)
-                            {
-                                Console.WriteLine(assignment.Item1);
+                            var allStudentExtractedText = await StudentEvaluation.GetAllUniqueExtractedText(courseId);
 
-                                // Join the text strings and print them as a whole
-                                string wholeText = string.Join(Environment.NewLine, assignment.Item2);
-                                Console.WriteLine(wholeText);
-                            }
+                            // Rest of the code
                         }
+<<<<<<< HEAD
+=======
 
 
                         // Create an instance of the OpenAiApiHelper class
@@ -92,6 +88,7 @@ namespace TLH
                         await OpenAiApiHelper.RunSimpleCompletionStreamTest(openAiService);
 
 
+>>>>>>> parent of e421557 (Teacher download files)
                         break;
 
                     default:
@@ -136,90 +133,7 @@ namespace TLH
             var selectedCourse = GetUserSelection<Course>(response.Courses, "Select a classroom by entering its number:");
             return selectedCourse.Id;
         }
-        public static string GetStudentsFromClassroom(string courseId)
-        {
-            var allStudents = new List<Student>();
-            string? nextPageToken = null;
 
-            do
-            {
-                var request = GoogleApiHelper.ClassroomService.Courses.Students.List(courseId);
-                request.PageSize = 100;
-                request.PageToken = nextPageToken;
-                var response = request.Execute();
-                allStudents.AddRange(response.Students);
-
-                nextPageToken = response?.NextPageToken;
-            } while (nextPageToken != null);
-
-            var selectedStudent = GetUserSelection<Student>(allStudents, "Select a student by entering their number:");
-            return selectedStudent.Profile.Id;
-        }
-        public static string GetEmailFromStudent(string studentId)
-        {
-            var request = GoogleApiHelper.ClassroomService.UserProfiles.Get(studentId);
-            var response = request.Execute();
-            return response.EmailAddress;
-        }
-        public static bool HasCourseWorkAttachments(string courseId, string courseWorkId, string studentUserId)
-        {
-            try
-            {
-                var submissionRequest = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
-                submissionRequest.UserId = studentUserId;
-                var submissionResponse = submissionRequest.Execute();
-
-                // Check if there are any attachments in the submissions
-                var hasAttachments = submissionResponse.StudentSubmissions.Any(submission =>
-                    submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0);
-
-                return hasAttachments;
-            }
-            catch (Exception ex)
-            {
-                // Log the error and studentUserId
-                Console.WriteLine($"Error occurred while checking for attachments for student {studentUserId}: {ex.Message}");
-                return false;
-            }
-        }
-        public static void PrintActiveStudentsInClassroom()
-        {
-            var courseId = SelectClassroomAndGetId();
-            var activeStudents = GetActiveStudents(courseId);
-
-            Console.WriteLine($"Active students in classroom {courseId}:");
-            foreach (var student in activeStudents)
-            {
-                Console.WriteLine(student.Profile.Name.FullName);
-            }
-        }
-        public static IList<Student> GetActiveStudents(string courseId)
-        {
-            var allStudents = new List<Student>();
-            string? nextPageToken = null;
-
-            do
-            {
-                var request = GoogleApiHelper.ClassroomService.Courses.Students.List(courseId);
-                request.PageSize = 100;
-                request.PageToken = nextPageToken;
-                var response = request.Execute();
-
-                //allStudents.AddRange can be null we need too add exception handeling
-                try
-                {
-                    allStudents.AddRange(response.Students);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error occurred while getting students for classroom {courseId}: {ex.Message}");
-                }
-
-                nextPageToken = response.NextPageToken;
-            } while (nextPageToken != null);
-
-            return allStudents;
-        }
         public static string GetCourseName(string courseId)
         {
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();

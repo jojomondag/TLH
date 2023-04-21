@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System;
-using System.Text.RegularExpressions;
-
-namespace TLH.Data
+﻿namespace TLH.Data
 {
     public static class Prooompting
     {
-        public static string TeacherFörhållningsätt;
-        public static string Uppgiften;
-        public static string ElevensInlämnadeUppgift;
+        public static string TeacherFörhållningsätt = "Hej";
+        public static string Uppgiften = "På";
+        public static string ElevensInlämnadeUppgift = "Dig";
 
         public static void CalculateTokens()
         {

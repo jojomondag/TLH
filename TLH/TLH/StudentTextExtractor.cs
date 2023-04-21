@@ -1,5 +1,5 @@
-﻿using Xceed.Words.NET;
-using System.Xml;
+﻿using System.Xml;
+using Xceed.Words.NET;
 
 namespace TLH
 {
@@ -18,11 +18,19 @@ namespace TLH
                 { ".docx", ExtractTextFromDocx }
             };
         }
+
         private Dictionary<string, Func<string, string>> fileHandlers;
-        public Dictionary<string, List<Tuple<bool, string, List<string>>>> ExtractTextFromStudentAssignments(string courseId)
+
+        public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
         {
             var userDirectory = Program.userPathLocation;
             var courseName = Program.GetCourseName(courseId);
+
+            if (userDirectory == null || courseName == null)
+            {
+                Console.WriteLine("Error: User directory or course name is null.");
+                return null;
+            }
             var courseFolderPath = Path.Combine(userDirectory, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
 
             if (!Directory.Exists(courseFolderPath))
@@ -31,7 +39,7 @@ namespace TLH
                 return null;
             }
 
-            var students = Program.GetActiveStudents(courseId);
+            var students = await ClassroomApiHelper.GetActiveStudents(courseId);
             var extractedTextData = new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
 
             foreach (var student in students)
@@ -65,6 +73,7 @@ namespace TLH
             }
             return extractedTextData;
         }
+
         private string ExtractTextFromFile(string filePath)
         {
             try
@@ -87,10 +96,12 @@ namespace TLH
 
             return string.Empty;
         }
+
         private string ExtractTextFromTxt(string filePath)
         {
             return File.ReadAllText(filePath);
         }
+
         private string ExtractTextFromDocx(string filePath)
         {
             using (DocX document = DocX.Load(filePath))
@@ -98,6 +109,7 @@ namespace TLH
                 return document.Text;
             }
         }
+
         private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
         {
             // Create a new document.
@@ -111,7 +123,7 @@ namespace TLH
                         // Create a Heading 1 paragraph for the assignment name
                         string validAssignmentName = RemoveInvalidXmlChars(tuple.Item2);
                         Xceed.Document.NET.Paragraph headingPara = document.InsertParagraph(validAssignmentName);
-                        headingPara.StyleName = "Heading1";
+                        headingPara.StyleId = "Heading1";
 
                         // Create a paragraph for each line in the extracted text list
                         foreach (var line in tuple.Item3)
@@ -128,6 +140,7 @@ namespace TLH
 
             Console.WriteLine("Document created successfully.");
         }
+
         private string RemoveInvalidXmlChars(string input)
         {
             var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();

@@ -110,11 +110,11 @@
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "[6.0.0, )"
+              "version": "(, )"
             },
             "System.IO.Packaging": {
               "target": "Package",
-              "version": "[4.7.0, )"
+              "version": "(, )"
             },
             "pythonnet": {
               "target": "Package",

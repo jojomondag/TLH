@@ -1,15 +1,15 @@
-﻿using OpenAI.GPT3.Managers;
-using OpenAI.GPT3;
-using OpenAI.GPT3.ObjectModels.RequestModels;
-using OpenAI.GPT3.ObjectModels;
+﻿using OpenAI.GPT3;
 using OpenAI.GPT3.Interfaces;
+using OpenAI.GPT3.Managers;
+using OpenAI.GPT3.ObjectModels;
+using OpenAI.GPT3.ObjectModels.RequestModels;
 using TLH.Data;
 
 namespace TLH
 {
     public class OpenAiApiHelper
     {
-        async public Task<IOpenAIService> ConnectAsync()
+        public async Task<IOpenAIService> ConnectAsync()
         {
             // Get the API key from the environment variable "OPENAI_API_KEY".
             var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
@@ -27,6 +27,7 @@ namespace TLH
 
             return openAiService;
         }
+
         public static async Task RunSimpleCompletionStreamTest(IOpenAIService sdk)
         {
             ConsoleExtensions.WriteLine("Chat Completion Stream Testing is starting:", ConsoleColor.Cyan);

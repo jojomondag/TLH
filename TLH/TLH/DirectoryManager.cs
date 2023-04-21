@@ -7,6 +7,7 @@ public class DirectoryManager
 {
     public const int MaxPathLength = 260;
     public const int MinFileNameLength = 5;
+
     public static string ShortenPath(string path, int maxLength = MaxPathLength)
     {
         if (path == null)
@@ -37,6 +38,7 @@ public class DirectoryManager
         var shortenedFileName = ShortenFileName(fileName, allowedLengthForName);
         return Path.Combine(directory, shortenedFileName);
     }
+
     public static string ShortenFileName(string fileName, int allowedLength)
     {
         if (fileName.Length <= allowedLength)
@@ -49,6 +51,7 @@ public class DirectoryManager
         var shortenedFileNameWithoutExtension = fileNameWithoutExtension.Substring(0, allowedLength - extension.Length);
         return $"{shortenedFileNameWithoutExtension}{extension}";
     }
+
     public static (string, bool) CreateDirectory(string parentDirectory, string folderName)
     {
         var directoryPath = Path.Combine(parentDirectory, SanitizeFolderName(folderName));
@@ -58,12 +61,14 @@ public class DirectoryManager
 
         return (directoryPath, isNewlyCreated);
     }
-    public static string CreateStudentDirectoryOnDesktop()
+
+    public static string CreateUserDirectoryOnDesktop()
     {
         Program.userPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         var (userDirectory, _) = CreateDirectory(Program.userPathLocation, Environment.UserName);
         return userDirectory;
     }
+
     public static string CreateStudentDirectory(string courseDirectory, Student student)
     {
         var studentName = SanitizeFolderName(student.Profile.Name.FullName);
@@ -76,6 +81,7 @@ public class DirectoryManager
 
         return studentDirectory;
     }
+
     public static string CreateAssignmentDirectory(string studentDirectory, CourseWork courseWork, string courseId)
     {
         var assignmentName = SanitizeFolderName(courseWork.Title);
@@ -84,10 +90,21 @@ public class DirectoryManager
 
         return assignmentDirectory;
     }
+
     public static string SanitizeFolderName(string folderName)
     {
         var invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
         var regex = new Regex($"[{Regex.Escape(invalidChars)}]");
         return regex.Replace(folderName, "_");
+    }
+
+    public static string CreateCourseDirectory(string courseId)
+    {
+        var course = ClassroomApiHelper.GetCourse(courseId).Result;
+        var courseName = DirectoryManager.SanitizeFolderName(course.Name);
+        var courseDirectory = Path.Combine(Program.userPathLocation, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
+        Directory.CreateDirectory(courseDirectory);
+
+        return courseDirectory;
     }
 }

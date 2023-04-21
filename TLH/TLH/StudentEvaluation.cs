@@ -31,7 +31,8 @@ public static class StudentEvaluation
             Console.WriteLine($"User folder for {userName} not found on desktop.");
         }
     }
-    private static Dictionary<string, List<string>> GetAllUniqueAssignmentNames()
+
+    private static Dictionary<string, List<string>>? GetAllUniqueAssignmentNames()
     {
         var allAssignmentNamesByCourse = new Dictionary<string, List<string>>();
 
@@ -74,16 +75,18 @@ public static class StudentEvaluation
 
         return allAssignmentNamesByCourse;
     }
-    public static Dictionary<string, List<Tuple<bool, string, List<string>>>> GetAllUniqueExtractedText(string courseId)
+
+    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>> GetAllUniqueExtractedText(string courseId)
     {
         // Create an instance of the StudentTextExtractor class
         var studentTextExtractor = new StudentTextExtractor();
 
-        // Call the ExtractTextFromStudentAssignments method
-        var extractedTextData = studentTextExtractor.ExtractTextFromStudentAssignments(courseId);
+        // Call the ExtractTextFromStudentAssignmentsAsync method
+        var extractedTextData = await studentTextExtractor.ExtractTextFromStudentAssignments(courseId);
 
         return extractedTextData;
     }
+
     public static void GenerateStudentAssignment(string mainFolderPath)
     {
         // Set the EPPlus license context to NonCommercial
@@ -146,14 +149,17 @@ public static class StudentEvaluation
             excelPackage.SaveAs(excelFile);
         }
     }
+
     private static void SetHorizontalAlignment(ExcelWorksheet worksheet)
     {
         worksheet.Cells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
     }
+
     private static void SetHeaderRow(ExcelWorksheet worksheet)
     {
         worksheet.Cells[1, 1].Value = "Student";
     }
+
     private static void AddStudentData(ExcelWorksheet worksheet, string[] studentFolders)
     {
         // Initialize a row counter
@@ -216,6 +222,7 @@ public static class StudentEvaluation
             row++;
         }
     }
+
     private static void SetConditionalFormatting(ExcelWorksheet worksheet)
     {
         var conditionalFormatting = worksheet.ConditionalFormatting.AddExpression(worksheet.Cells[2, 2, worksheet.Dimension.Rows, 2]);
