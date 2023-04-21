@@ -14,15 +14,7 @@ namespace TLH
         {
             userPathLocation = DirectoryManager.CreateUserDirectoryOnDesktop();
             GoogleApiHelper.InitializeGoogleServices();
-<<<<<<< HEAD
             await Start(); // Use await here
-=======
-            MainAsync().GetAwaiter().GetResult(); // Call MainAsync from Main
-        }
-        private static async Task MainAsync() // Create a separate async method
-        {
-            await Start();
->>>>>>> parent of e421557 (Teacher download files)
         }
 
         public static async Task Start()
@@ -74,21 +66,6 @@ namespace TLH
 
                             // Rest of the code
                         }
-<<<<<<< HEAD
-=======
-
-
-                        // Create an instance of the OpenAiApiHelper class
-                        var openAiApiHelper = new OpenAiApiHelper();
-
-                        // Call the ConnectAsync() method to get an instance of IOpenAIService
-                        IOpenAIService openAiService = await openAiApiHelper.ConnectAsync();
-
-                        // Pass the IOpenAIService instance to the RunSimpleCompletionStreamTest() method
-                        await OpenAiApiHelper.RunSimpleCompletionStreamTest(openAiService);
-
-
->>>>>>> parent of e421557 (Teacher download files)
                         break;
 
                     default:
