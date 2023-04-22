@@ -10,8 +10,8 @@ namespace TLH
         private static async Task Main(string[] args)
         {
             userPathLocation = DirectoryManager.CreateUserDirectoryOnDesktop();
+            GoogleApiHelper.InitializeGoogleServices(); // Move this line before await Start();
             await Start(); // Use await here
-            GoogleApiHelper.InitializeGoogleServices();
         }
 
         public static async Task Start()
