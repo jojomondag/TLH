@@ -1,5 +1,4 @@
-﻿using AI.Dev.OpenAI.GPT;
-using GPT_3_Encoder_Sharp;
+﻿using GPT_3_Encoder_Sharp;
 using SharpToken;
 
 namespace GPT3Example
@@ -18,18 +17,6 @@ namespace GPT3Example
             Console.WriteLine($"Tokens: {encoded.Count()}, Characters: {countText.Length}");
             Console.WriteLine("decoded is: \r\n" + encoder.Decode(encoded));
         }
-
-        public static void openaitools(String countText)
-        {
-            Console.WriteLine();
-            Console.WriteLine("openaitools");
-            //Link Repo: https://github.com/dluc/openai-tools
-
-            List<int> tokens = GPT3Tokenizer.Encode(countText);
-
-            Console.WriteLine(CountInts(tokens));
-        }
-
         public static void SharpTopkenCounter(String countText)
         {
             Console.WriteLine();

@@ -9,7 +9,7 @@ namespace TLH
 {
     public class OpenAiApiHelper
     {
-        public async Task<IOpenAIService> ConnectAsync()
+        public IOpenAIService Connect()
         {
             // Get the API key from the environment variable "OPENAI_API_KEY".
             var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");

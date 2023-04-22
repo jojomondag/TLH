@@ -35,6 +35,9 @@
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1608"
+          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -44,10 +47,6 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
-            "AI.Dev.OpenAI.GPT": {
-              "target": "Package",
-              "version": "[1.0.2, )"
-            },
             "Betalgo.OpenAI.GPT3": {
               "target": "Package",
               "version": "[6.8.3, )"
@@ -80,45 +79,17 @@
               "target": "Package",
               "version": "[1.60.0.2986, )"
             },
-            "HtmlAgilityPack": {
-              "target": "Package",
-              "version": "[1.11.46, )"
-            },
-            "Microsoft.ML.OnnxRuntime": {
-              "target": "Package",
-              "version": "[1.14.1, )"
-            },
-            "Python.Runtime": {
-              "target": "Package",
-              "version": "[2.7.9, )"
-            },
-            "Selenium.WebDriver": {
-              "target": "Package",
-              "version": "[4.8.2, )"
-            },
-            "Selenium.WebDriver.ChromeDriver": {
-              "target": "Package",
-              "version": "[112.0.5615.4900, )"
-            },
-            "Selenium.WebDriver.MicrosoftDriver": {
-              "target": "Package",
-              "version": "[17.17134.0, )"
-            },
             "SharpToken": {
               "target": "Package",
               "version": "[1.0.26, )"
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "(, )"
+              "version": "[6.0.0, )"
             },
             "System.IO.Packaging": {
               "target": "Package",
-              "version": "(, )"
-            },
-            "pythonnet": {
-              "target": "Package",
-              "version": "[3.0.1, )"
+              "version": "[6.0.0, )"
             }
           },
           "imports": [

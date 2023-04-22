@@ -76,7 +76,7 @@ public static class StudentEvaluation
         return allAssignmentNamesByCourse;
     }
 
-    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>> GetAllUniqueExtractedText(string courseId)
+    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> GetAllUniqueExtractedText(string courseId)
     {
         // Create an instance of the StudentTextExtractor class
         var studentTextExtractor = new StudentTextExtractor();
@@ -84,7 +84,7 @@ public static class StudentEvaluation
         // Call the ExtractTextFromStudentAssignmentsAsync method
         var extractedTextData = await studentTextExtractor.ExtractTextFromStudentAssignments(courseId);
 
-        return extractedTextData;
+        return extractedTextData ?? new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
     }
 
     public static void GenerateStudentAssignment(string mainFolderPath)
@@ -98,55 +98,65 @@ public static class StudentEvaluation
             // Get a list of all unique assignment names for all courses
             var allUniqueAssignmentNamesByCourse = GetAllUniqueAssignmentNames();
 
-            // Get a list of all class folders within the main folder
-            string[] classFolders = Directory.GetDirectories(mainFolderPath);
-
-            // Loop through each class folder
-            foreach (string classFolder in classFolders)
+            if (allUniqueAssignmentNamesByCourse != null)
             {
-                // Get the class name from the folder name
-                string className = Path.GetFileName(classFolder);
+                // Get a list of all class folders within the main folder
+                string[] classFolders = Directory.GetDirectories(mainFolderPath);
 
-                // Get a list of all unique assignment names for the current class
-                var allUniqueAssignmentNames = allUniqueAssignmentNamesByCourse[className];
-
-                // Get a list of all student folders within the class folder
-                string[] studentFolders = Directory.GetDirectories(classFolder);
-
-                // Add a new worksheet to the Excel package for the current class
-                var worksheet = excelPackage.Workbook.Worksheets.Add(className);
-
-                // Set the horizontal alignment for the entire worksheet
-                SetHorizontalAlignment(worksheet);
-
-                // Set the header row for the worksheet
-                SetHeaderRow(worksheet);
-
-                int column = 2;
-
-                // Add assignments to the worksheet
-                foreach (var assignmentName in allUniqueAssignmentNames)
+                // Loop through each class folder
+                foreach (string classFolder in classFolders)
                 {
-                    string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
-                    worksheet.Cells[1, column].Value = sanitizedAssignmentName;
-                    column++;
+                    // Get the class name from the folder name
+                    string className = Path.GetFileName(classFolder);
+
+                    // Get a list of all unique assignment names for the current class
+                    if (allUniqueAssignmentNamesByCourse.TryGetValue(className, out var allUniqueAssignmentNames))
+                    {
+                        // Get a list of all student folders within the class folder
+                        string[] studentFolders = Directory.GetDirectories(classFolder);
+
+                        // Add a new worksheet to the Excel package for the current class
+                        var worksheet = excelPackage.Workbook.Worksheets.Add(className);
+
+                        // Set the horizontal alignment for the entire worksheet
+                        SetHorizontalAlignment(worksheet);
+
+                        // Set the header row for the worksheet
+                        SetHeaderRow(worksheet);
+
+                        int column = 2;
+
+                        // Add assignments to the worksheet
+                        foreach (var assignmentName in allUniqueAssignmentNames)
+                        {
+                            string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
+                            worksheet.Cells[1, column].Value = sanitizedAssignmentName;
+                            column++;
+                        }
+
+                        // Add student data to the worksheet
+                        AddStudentData(worksheet, studentFolders);
+
+                        // Apply conditional formatting to the worksheet
+                        SetConditionalFormatting(worksheet);
+
+                        // Auto-fit column widths
+                        worksheet.Cells.AutoFitColumns();
+                    }
+                    else
+                    {
+                        // Handle the case where the className key is not found in the dictionary
+                    }
                 }
 
-                // Add student data to the worksheet
-                AddStudentData(worksheet, studentFolders);
-
-                // Apply conditional formatting to the worksheet
-                SetConditionalFormatting(worksheet);
-
-                // Auto-fit column widths
-                worksheet.Cells.AutoFitColumns();
+                // Save the Excel file to disk
+                FileInfo excelFile = new FileInfo(Path.Combine(mainFolderPath, "StudentAssignments.xlsx"));
+                excelPackage.SaveAs(excelFile);
             }
-
-            // Save the Excel file to disk
-
-            // Save the Excel file to disk
-            FileInfo excelFile = new FileInfo(Path.Combine(mainFolderPath, "StudentAssignments.xlsx"));
-            excelPackage.SaveAs(excelFile);
+            else
+            {
+                // Handle the case where allUniqueAssignmentNamesByCourse is null
+            }
         }
     }
 
@@ -171,55 +181,58 @@ public static class StudentEvaluation
             // Get the student name from the folder name
             string studentName = Path.GetFileName(studentFolder);
 
-            // Add the student name to the worksheet
-            worksheet.Cells[row, 1].Value = studentName;
-
-            // Loop through each assignment column
-            int column = 2;
-
-            while (worksheet.Cells[1, column].Value != null)
+            if (studentName != null)
             {
-                string assignmentName = worksheet.Cells[1, column].Value?.ToString() ?? string.Empty;
-                string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
+                // Add the student name to the worksheet
+                worksheet.Cells[row, 1].Value = studentName;
 
-                // Check if the student has files in the assignment folder
-                if (Directory.Exists(studentAssignmentFolder))
+                // Loop through each assignment column
+                int column = 2;
+
+                while (worksheet.Cells[1, column].Value != null)
                 {
-                    int count = Directory.EnumerateFileSystemEntries(studentAssignmentFolder, "*", SearchOption.AllDirectories).Count();
-                    if (count > 0)
+                    string assignmentName = worksheet.Cells[1, column].Value?.ToString() ?? string.Empty;
+                    string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
+
+                    // Check if the student has files in the assignment folder
+                    if (Directory.Exists(studentAssignmentFolder))
                     {
-                        // Set the cell to the right of the student name to green
-                        using (var range = worksheet.Cells[row, column])
+                        int count = Directory.EnumerateFileSystemEntries(studentAssignmentFolder, "*", SearchOption.AllDirectories).Count();
+                        if (count > 0)
                         {
-                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Green);
+                            // Set the cell to the right of the student name to green
+                            using (var range = worksheet.Cells[row, column])
+                            {
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Green);
+                            }
+                        }
+                        else
+                        {
+                            // Set the cell to the right of the student name to red
+                            using (var range = worksheet.Cells[row, column])
+                            {
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Red);
+                            }
                         }
                     }
                     else
                     {
-                        // Set the cell to the right of the student name to red
+                        // Set the cell to the right of the student name to yellow (no folder found)
                         using (var range = worksheet.Cells[row, column])
                         {
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Red);
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
                         }
                     }
-                }
-                else
-                {
-                    // Set the cell to the right of the student name to yellow (no folder found)
-                    using (var range = worksheet.Cells[row, column])
-                    {
-                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
-                    }
+
+                    column++;
                 }
 
-                column++;
+                // Increment the row counter
+                row++;
             }
-
-            // Increment the row counter
-            row++;
         }
     }
 

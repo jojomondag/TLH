@@ -100,6 +100,12 @@ public class DirectoryManager
 
     public static string CreateCourseDirectory(string courseId)
     {
+        if (Program.userPathLocation == null)
+        {
+            // Handle the null case, for example, by returning an empty string
+            return string.Empty;
+        }
+
         var course = ClassroomApiHelper.GetCourse(courseId).Result;
         var courseName = DirectoryManager.SanitizeFolderName(course.Name);
         var courseDirectory = Path.Combine(Program.userPathLocation, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");

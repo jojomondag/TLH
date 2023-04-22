@@ -1,8 +1,5 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using GPT3Example;
-using OpenAI.GPT3.Interfaces;
-using TLH.Data;
 
 namespace TLH
 {
@@ -13,8 +10,8 @@ namespace TLH
         private static async Task Main(string[] args)
         {
             userPathLocation = DirectoryManager.CreateUserDirectoryOnDesktop();
-            GoogleApiHelper.InitializeGoogleServices();
             await Start(); // Use await here
+            GoogleApiHelper.InitializeGoogleServices();
         }
 
         public static async Task Start()
@@ -74,6 +71,7 @@ namespace TLH
                 }
             }
         }
+
         public static T GetUserSelection<T>(IList<T> items, string displayMessage)
         {
             Console.WriteLine();

@@ -23,6 +23,11 @@ namespace TLH
             return courses;
         }
 
+        public static async Task<Student> GetStudent(string courseId, string userId)
+        {
+            return await GoogleApiHelper.ClassroomService.Courses.Students.Get(courseId, userId).ExecuteAsync();
+        }
+
         public static async Task<List<CourseWork>> ListCourseWork(string courseId)
         {
             var courseWorks = new List<CourseWork>();
@@ -35,11 +40,6 @@ namespace TLH
             } while (!string.IsNullOrEmpty(request.PageToken));
 
             return courseWorks;
-        }
-
-        public static async Task<Student> GetStudent(string courseId, string userId)
-        {
-            return await GoogleApiHelper.ClassroomService.Courses.Students.Get(courseId, userId).ExecuteAsync();
         }
 
         public static async Task<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
