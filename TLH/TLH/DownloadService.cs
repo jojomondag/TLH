@@ -5,11 +5,9 @@ namespace TLH
 {
     public class DownloadService
     {
-        // TODO: Do check too see that update google classrooom files are not downloaded again. Maybe change metadate of file on desktop too be older then that in google classroom.
-        //Public methods
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
-            //We have to add checks so download is not happening if files are already downloaded.
+            // We have to add checks so download is not happening if files are already downloaded.
             string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId);
 
             var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
@@ -51,38 +49,35 @@ namespace TLH
 
             foreach (var attachment in submission.AssignmentSubmission.Attachments)
             {
-                // ...
                 if (attachment?.DriveFile?.Id != null)
                 {
+                    // Handle Google Drive file attachments
                     var fileId = attachment.DriveFile.Id;
                     var fileName = attachment.DriveFile.Title;
-                    Google.Apis.Drive.v3.Data.File? driveFile = null;
+
+                    // Get the mimeType of the file
+                    var mimeType = await GetFileMimeTypeFromGoogleDrive(fileId);
+
+                    await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, mimeType);
+                }
+                else if (attachment?.Link != null)
+                {
+                    // Handle link attachments
+                    var link = attachment.Link.Url;
+                    var linkFileName = "link_" + student.UserId + ".txt";
+                    var linkFilePath = Path.Combine(destinationDirectory, linkFileName);
 
                     try
                     {
-                        driveFile = GoogleApiHelper.DriveService.Files.Get(fileId).Execute();
+                        using (StreamWriter writer = new StreamWriter(linkFilePath, true))
+                        {
+                            await writer.WriteLineAsync(link);
+                        }
+                        Console.WriteLine($"Saved link for student {student.Profile.Name.FullName} to: {linkFilePath}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error fetching file information: {ex.Message}");
-                        continue;
-                    }
-
-                    var mimeType = driveFile?.MimeType;
-                    var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
-
-                    fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
-
-                    var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
-                    var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
-
-                    if (!File.Exists(filePath))
-                    {
-                        await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, exportMimeType);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Skipping {fileName} as it already exists for student: {student.Profile.Name.FullName}");
+                        Console.WriteLine($"Error saving link for student {student.Profile.Name.FullName}: {ex.Message}");
                     }
                 }
             }
@@ -95,7 +90,7 @@ namespace TLH
             var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
             var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
 
-            // Missing code for downloading and saving the file
+            // Download the file
             var stream = new MemoryStream();
 
             if (!string.IsNullOrEmpty(exportMimeType))
@@ -117,6 +112,9 @@ namespace TLH
                 await getRequest.DownloadAsync(stream);
             }
 
+            // Reset the stream position to the beginning
+            stream.Seek(0, SeekOrigin.Begin);
+
             // Save the downloaded file to the destination directory
             Console.WriteLine($"Saving file to: {filePath}");
 
@@ -124,7 +122,7 @@ namespace TLH
             {
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                 {
-                    stream.WriteTo(fileStream);
+                    await stream.CopyToAsync(fileStream);
                 }
             }
             catch (DirectoryNotFoundException ex)
@@ -140,7 +138,26 @@ namespace TLH
                 Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
             }
         }
-        //Private methods
+        public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var file = await GoogleApiHelper.DriveService.Files.Get(fileId).ExecuteAsync();
+                return file.MimeType;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving mimeType for file ID {fileId}: {ex.Message}");
+                return null;
+            }
+        }
+
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
         {
             string exportMimeType = "";
@@ -155,6 +172,11 @@ namespace TLH
             {
                 exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 fileExtension = ".xlsx";
+            }
+            else if (mimeType == "application/vnd.google-apps.presentation")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+                fileExtension = ".pptx";
             }
             else
             {
@@ -179,7 +201,7 @@ namespace TLH
                     }
                 case DownloadStatus.Failed:
                     {
-                        Console.WriteLine($"Download failed for {fileName}");
+                        Console.WriteLine($"Download failed for {fileName}: {progress.Exception?.Message}");
                         break;
                     }
             }
