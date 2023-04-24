@@ -10,11 +10,11 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/TLH/TLH/bin/Debug/net6.0/TLH.dll",
+            "program": "${workspaceFolder}/TLH/bin/Debug/net6.0/TLH.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/TLH/TLH",
+            "cwd": "${workspaceFolder}/TLH",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-            "console": "internalConsole",
+            "console": "externalTerminal",
             "stopAtEntry": false
         },
         {
