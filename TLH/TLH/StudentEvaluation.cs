@@ -6,6 +6,7 @@ using TLH;
 //This Class creates a Local Excel file with all the data Gathered from the folders crated on the Local Computer.
 public static class StudentEvaluation
 {
+    //TODO:Vi behöver kanske skapa en klass till. En klass för Bedömmande, och en annan för att skapa sätta upp filer och managa dessa filer på rätt sätt, visa data hämta extraherea data är olika saker. Kan fråga chat gpt om vad som skall göra vad och hur vi behöver dela upp det så att det känns logiskt.
     public static void LookForUserFolder()
     {
         // Get the current user's name
@@ -31,7 +32,6 @@ public static class StudentEvaluation
             Console.WriteLine($"User folder for {userName} not found on desktop.");
         }
     }
-
     private static Dictionary<string, List<string>>? GetAllUniqueAssignmentNames()
     {
         var allAssignmentNamesByCourse = new Dictionary<string, List<string>>();
@@ -75,8 +75,7 @@ public static class StudentEvaluation
 
         return allAssignmentNamesByCourse;
     }
-
-    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> GetAllUniqueExtractedText(string courseId)
+    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractStructuredTextFromAssignments(string courseId)
     {
         // Create an instance of the StudentTextExtractor class
         var studentTextExtractor = new StudentTextExtractor();
@@ -86,7 +85,6 @@ public static class StudentEvaluation
 
         return extractedTextData ?? new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
     }
-
     public static void GenerateStudentAssignment(string mainFolderPath)
     {
         // Set the EPPlus license context to NonCommercial
@@ -159,17 +157,14 @@ public static class StudentEvaluation
             }
         }
     }
-
     private static void SetHorizontalAlignment(ExcelWorksheet worksheet)
     {
         worksheet.Cells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
     }
-
     private static void SetHeaderRow(ExcelWorksheet worksheet)
     {
         worksheet.Cells[1, 1].Value = "Student";
     }
-
     private static void AddStudentData(ExcelWorksheet worksheet, string[] studentFolders)
     {
         // Initialize a row counter
@@ -235,7 +230,6 @@ public static class StudentEvaluation
             }
         }
     }
-
     private static void SetConditionalFormatting(ExcelWorksheet worksheet)
     {
         var conditionalFormatting = worksheet.ConditionalFormatting.AddExpression(worksheet.Cells[2, 2, worksheet.Dimension.Rows, 2]);

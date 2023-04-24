@@ -20,10 +20,8 @@ namespace TLH
             ClassroomService.Scope.ClassroomCourseworkStudentsReadonly,
             DriveService.Scope.Drive,
         };
-
         public static ClassroomService ClassroomService { get; private set; } = new ClassroomService(new BaseClientService.Initializer());
         public static DriveService DriveService { get; private set; } = new DriveService(new BaseClientService.Initializer());
-
         public static void InitializeGoogleServices()
         {
             UserCredential credential;
@@ -58,7 +56,6 @@ namespace TLH
                 ApplicationName = "YourApplicationNameHere"
             });
         }
-
         public static void RefreshAccessToken(UserCredential credential)
         {
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))

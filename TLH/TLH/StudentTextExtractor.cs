@@ -9,22 +9,42 @@ namespace TLH
         {
             fileHandlers = new Dictionary<string, Func<string, string>>(StringComparer.OrdinalIgnoreCase)
             {
-                { ".cs", ExtractTextFromTxt },
-                { ".txt", ExtractTextFromTxt },
-                { ".java", ExtractTextFromTxt },
-                { ".js", ExtractTextFromTxt },
-                { ".py", ExtractTextFromTxt },
-                { ".cpp", ExtractTextFromTxt },
                 { ".docx", ExtractTextFromDocx }
             };
+
+            var textBasedExtensions = new List<string> { ".cs", ".txt", ".java", ".js", ".py", ".cpp" };
+
+            foreach (var ext in textBasedExtensions)
+            {
+                fileHandlers[ext] = ExtractTextFromTxt;
+            }
         }
 
         private Dictionary<string, Func<string, string>> fileHandlers;
+        public async Task ExtractAndPrintTextData()
+        {
+            var allStudentExtractedText = await ExtractTextFromStudentAssignments(await ClassroomApiHelper.SelectClassroomAndGetId());
 
+            if (allStudentExtractedText != null)
+            {
+                foreach (var student in allStudentExtractedText)
+                {
+                    Console.WriteLine(student.Key);
+                    foreach (var assignment in student.Value)
+                    {
+                        Console.WriteLine(assignment.Item1);
+
+                        // Join the text strings and print them as a whole
+                        string wholeText = string.Join(Environment.NewLine, assignment.Item2);
+                        Console.WriteLine(wholeText);
+                    }
+                }
+            }
+        }
         public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
         {
             var userDirectory = Program.userPathLocation;
-            var courseName = Program.GetCourseName(courseId);
+            var courseName = ClassroomApiHelper.GetCourseName(courseId);
 
             if (userDirectory == null || courseName == null)
             {
@@ -73,7 +93,6 @@ namespace TLH
             }
             return extractedTextData;
         }
-
         private string ExtractTextFromFile(string filePath)
         {
             try
@@ -82,7 +101,8 @@ namespace TLH
 
                 if (fileHandlers.TryGetValue(fileExtension, out var handler))
                 {
-                    return handler(filePath);
+                    string extractedText = handler(filePath);
+                    return RemoveInvalidXmlChars(extractedText);
                 }
                 else
                 {
@@ -96,12 +116,10 @@ namespace TLH
 
             return string.Empty;
         }
-
         private string ExtractTextFromTxt(string filePath)
         {
             return File.ReadAllText(filePath);
         }
-
         private string ExtractTextFromDocx(string filePath)
         {
             using (DocX document = DocX.Load(filePath))
@@ -109,7 +127,6 @@ namespace TLH
                 return document.Text;
             }
         }
-
         private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
         {
             // Create a new document.
@@ -121,15 +138,13 @@ namespace TLH
                     if (tuple.Item1)
                     {
                         // Create a Heading 1 paragraph for the assignment name
-                        string validAssignmentName = RemoveInvalidXmlChars(tuple.Item2);
-                        Xceed.Document.NET.Paragraph headingPara = document.InsertParagraph(validAssignmentName);
+                        Xceed.Document.NET.Paragraph headingPara = document.InsertParagraph(tuple.Item2);
                         headingPara.StyleId = "Heading1";
 
                         // Create a paragraph for each line in the extracted text list
                         foreach (var line in tuple.Item3)
                         {
-                            string validLine = RemoveInvalidXmlChars(line);
-                            document.InsertParagraph(validLine);
+                            document.InsertParagraph(line);
                         }
                     }
                 }
@@ -140,7 +155,6 @@ namespace TLH
 
             Console.WriteLine("Document created successfully.");
         }
-
         private string RemoveInvalidXmlChars(string input)
         {
             var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();

@@ -5,8 +5,11 @@ namespace TLH
 {
     public class DownloadService
     {
+        // TODO: Do check too see that update google classrooom files are not downloaded again. Maybe change metadate of file on desktop too be older then that in google classroom.
+        //Public methods
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
+            //We have to add checks so download is not happening if files are already downloaded.
             string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId);
 
             var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
@@ -15,7 +18,6 @@ namespace TLH
                 await DownloadCourseWorkFiles(courseId, courseWork, courseDirectory);
             }
         }
-
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory)
         {
             var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id);
@@ -34,7 +36,6 @@ namespace TLH
                 }
             }
         }
-
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student)
         {
             if (submission.AssignmentSubmission?.Attachments == null || submission.AssignmentSubmission.Attachments.Count == 0)
@@ -50,76 +51,51 @@ namespace TLH
 
             foreach (var attachment in submission.AssignmentSubmission.Attachments)
             {
-                if (attachment?.DriveFile?.Id == null)
+                // ...
+                if (attachment?.DriveFile?.Id != null)
                 {
-                    // New condition to check for attachment.Link
-                    if (attachment?.Link != null)
+                    var fileId = attachment.DriveFile.Id;
+                    var fileName = attachment.DriveFile.Title;
+                    Google.Apis.Drive.v3.Data.File? driveFile = null;
+
+                    try
                     {
-                        string linkUrl = attachment.Link.Url;
-                        string linkFileName = "Link_" + linkUrl.GetHashCode() + ".txt"; // Use the link's hashcode to create a unique file name
+                        driveFile = GoogleApiHelper.DriveService.Files.Get(fileId).Execute();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error fetching file information: {ex.Message}");
+                        continue;
+                    }
 
-                        string filePath = Path.Combine(destinationDirectory, linkFileName);
+                    var mimeType = driveFile?.MimeType;
+                    var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
 
-                        // Check if the file already exists, if not, create and save the link
-                        if (!File.Exists(filePath))
-                        {
-                            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                            using (var streamWriter = new StreamWriter(fileStream))
-                            {
-                                await streamWriter.WriteAsync(linkUrl);
-                            }
+                    fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
 
-                            Console.WriteLine($"Saved link: {linkUrl} as {linkFileName} for student: {student.Profile.Name.FullName}");
-                        }
+                    var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
+                    var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
+
+                    if (!File.Exists(filePath))
+                    {
+                        await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, exportMimeType);
                     }
                     else
                     {
-                        Console.WriteLine($"Error: Attachment or DriveFile is null, or the Id is missing for student: {student.Profile.Name.FullName}");
+                        Console.WriteLine($"Skipping {fileName} as it already exists for student: {student.Profile.Name.FullName}");
                     }
-                    continue;
                 }
-
-                Google.Apis.Drive.v3.Data.File? driveFile = null;
-                try
-                {
-                    driveFile = GoogleApiHelper.DriveService.Files.Get(attachment.DriveFile.Id).Execute();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error fetching file information: {ex.Message}");
-                    continue;
-                }
-
-                var fileId = attachment.DriveFile.Id;
-                var fileName = attachment.DriveFile.Title;
-                var mimeType = driveFile?.MimeType;
-
-                await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, mimeType);
             }
         }
-
         public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, string? mimeType = null)
         {
-            var exportMimeType = "";
-            var fileExtension = "";
-
-            if (mimeType == "application/vnd.google-apps.document")
-            {
-                exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-                fileExtension = ".docx";
-            }
-            else if (mimeType == "application/vnd.google-apps.spreadsheet")
-            {
-                exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                fileExtension = ".xlsx";
-            }
-            else
-            {
-                fileExtension = Path.GetExtension(fileName);
-            }
-
+            var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
             fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
 
+            var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
+            var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
+
+            // Missing code for downloading and saving the file
             var stream = new MemoryStream();
 
             if (!string.IsNullOrEmpty(exportMimeType))
@@ -142,15 +118,11 @@ namespace TLH
             }
 
             // Save the downloaded file to the destination directory
-            var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
-            var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
-            var shortenedFilePath = DirectoryManager.ShortenPath(filePath);
-
-            Console.WriteLine($"Saving file to: {shortenedFilePath}");
+            Console.WriteLine($"Saving file to: {filePath}");
 
             try
             {
-                using (var fileStream = new FileStream(shortenedFilePath, FileMode.Create, FileAccess.Write))
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                 {
                     stream.WriteTo(fileStream);
                 }
@@ -168,7 +140,29 @@ namespace TLH
                 Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
             }
         }
+        //Private methods
+        private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
+        {
+            string exportMimeType = "";
+            string fileExtension = "";
 
+            if (mimeType == "application/vnd.google-apps.document")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                fileExtension = ".docx";
+            }
+            else if (mimeType == "application/vnd.google-apps.spreadsheet")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                fileExtension = ".xlsx";
+            }
+            else
+            {
+                fileExtension = Path.GetExtension(fileName);
+            }
+
+            return (exportMimeType, fileExtension);
+        }
         private static void HandleDownloadProgress(IDownloadProgress progress, string fileName)
         {
             switch (progress.Status)
