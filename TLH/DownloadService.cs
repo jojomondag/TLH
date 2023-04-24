@@ -90,6 +90,23 @@ namespace TLH
             var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
             var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
 
+            // Check if the file exists
+            if (File.Exists(filePath))
+            {
+                var localFileModifiedTime = File.GetLastWriteTimeUtc(filePath);
+                var googleDriveFileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
+
+                Console.WriteLine($"Local file {fileName} modified time: {localFileModifiedTime}");
+                // Add this line to print the Google Classroom file modified time in the correct format
+                Console.WriteLine($"Google Classroom file {fileName} modified time: {googleDriveFileModifiedTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}");
+
+                // Check if the Google Classroom file is newer than the local file
+                if (googleDriveFileModifiedTime.HasValue && googleDriveFileModifiedTime.Value <= localFileModifiedTime)
+                {
+                    Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
+                    return;
+                }
+            }
             // Download the file
             var stream = new MemoryStream();
 
@@ -138,6 +155,36 @@ namespace TLH
                 Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
             }
         }
+        public static async Task<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var request = GoogleApiHelper.DriveService.Files.Get(fileId);
+                request.Fields = "modifiedTime, name"; // Add this line to specify the fields you want to retrieve
+                var file = await request.ExecuteAsync();
+
+                if (file == null)
+                {
+                    Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    return null;
+                }
+
+                Console.WriteLine($"File {file.Name} modified time: {file.ModifiedTime?.ToUniversalTime()}");
+
+                return file.ModifiedTime?.ToUniversalTime(); // Convert the modified time to UTC
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving modified time for file ID {fileId}: {ex.Message}");
+                return null;
+            }
+        }
         public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
         {
             if (GoogleApiHelper.DriveService == null)
@@ -157,7 +204,6 @@ namespace TLH
                 return null;
             }
         }
-
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
         {
             string exportMimeType = "";
