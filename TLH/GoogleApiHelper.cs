@@ -36,13 +36,11 @@ namespace TLH
                     CancellationToken.None,
                     new FileDataStore(credPath, true)).Result;
             }
-
             if (credential == null)
             {
                 Console.WriteLine("Failed to authenticate. Please log in with your Google account.");
                 return;
             }
-
             // initialize Classroom and Drive services
             ClassroomService = new ClassroomService(new BaseClientService.Initializer()
             {
@@ -70,20 +68,17 @@ namespace TLH
                     new TokenResponse { RefreshToken = credential.Token.RefreshToken }
                 );
             }
-
             if (credential == null)
             {
                 Console.WriteLine("Failed to refresh access token. Please log in with your Google account.");
                 return;
             }
-
             // create new Classroom and Drive services with refreshed credential
             var newClassroomService = new ClassroomService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "YourApplicationNameHere"
             });
-
             var newDriveService = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,

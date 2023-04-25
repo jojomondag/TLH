@@ -106,5 +106,4 @@ public class DirectoryManager
         var regex = new Regex($"[{Regex.Escape(invalidChars)}]");
         return regex.Replace(folderName, "_");
     }
-
 }

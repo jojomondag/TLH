@@ -1,5 +1,4 @@
 ﻿namespace TLH;
-
 public static class ConsoleExtensions
 {
     public static void WriteLine(string value, ConsoleColor color)
