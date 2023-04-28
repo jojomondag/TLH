@@ -1,0 +1,1401 @@
+﻿using Google.Apis.Classroom.v1;
+using Google.Apis.Classroom.v1.Data;
+
+namespace TLH
+{
+    public static class ClassroomApiHelper
+    {
+        public static T GetUserSelection<T>(IList<T> items, string displayMessage)
+        {
+            Console.WriteLine();
+            Console.WriteLine(displayMessage);
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] is Course course)
+                {
+                    Console.WriteLine($"{i + 1}. {course.Name}");
+                }
+                else if (items[i] is Student student)
+                {
+                    Console.WriteLine($"{i + 1}. {student.Profile.Name.FullName}");
+                }
+            }
+
+            int selection;
+            while (true)
+            {
+                if (int.TryParse(Console.ReadLine(), out selection) && selection > 0 && selection <= items.Count)
+                {
+                    return items[selection - 1];
+                }
+                Console.WriteLine("Invalid selection. Please try again.");
+            }
+        }
+        public static async Task<string> SelectClassroomAndGetId()
+        {
+            var request = GoogleApiHelper.ClassroomService.Courses.List();
+            request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
+            var response = request.Execute();
+            var selectedCourse = GetUserSelection<Course>(response.Courses, "Select a classroom by entering its number:");
+
+            if (!string.IsNullOrEmpty(selectedCourse.Id))
+            {
+                await DownloadService.DownloadAllFilesFromClassroom(selectedCourse.Id);
+                Console.WriteLine("Press Enter to continue.");
+                Console.ReadLine();
+            }
+
+            return selectedCourse.Id;
+        }
+        public static async Task<Course> GetCourse(string courseId)
+        {
+            return await GoogleApiHelper.ClassroomService.Courses.Get(courseId).ExecuteAsync();
+        }
+        public static async Task<List<Course>> GetAllCourses()
+        {
+            var courses = new List<Course>();
+            var request = GoogleApiHelper.ClassroomService.Courses.List();
+            do
+            {
+                var response = await request.ExecuteAsync();
+                courses.AddRange(response.Courses);
+                request.PageToken = response.NextPageToken;
+            } while (!string.IsNullOrEmpty(request.PageToken));
+
+            return courses;
+        }
+        public static async Task<Student> GetStudent(string courseId, string userId)
+        {
+            return await GoogleApiHelper.ClassroomService.Courses.Students.Get(courseId, userId).ExecuteAsync();
+        }
+        public static async Task<List<CourseWork>> ListCourseWork(string courseId)
+        {
+            var courseWorks = new List<CourseWork>();
+            var request = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(courseId);
+            do
+            {
+                var response = await request.ExecuteAsync();
+                courseWorks.AddRange(response.CourseWork);
+                request.PageToken = response.NextPageToken;
+            } while (!string.IsNullOrEmpty(request.PageToken));
+
+            return courseWorks;
+        }
+        public static async Task<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
+        {
+            var request = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
+            var response = await request.ExecuteAsync();
+            return response.StudentSubmissions;
+        }
+        public static async Task PrintActiveStudentsInClassroom(string courseId)
+        {
+            var activeStudents = await GetActiveStudents(courseId);
+
+            Console.WriteLine($"Active students in classroom {courseId}:");
+            foreach (var student in activeStudents)
+            {
+                Console.WriteLine(student.Profile.Name.FullName);
+            }
+        }
+        public static async Task<IList<Student>> GetActiveStudents(string courseId)
+        {
+            var allStudents = new List<Student>();
+            string? nextPageToken = null;
+
+            do
+            {
+                var request = GoogleApiHelper.ClassroomService.Courses.Students.List(courseId);
+                request.PageSize = 100;
+                request.PageToken = nextPageToken;
+                var response = await request.ExecuteAsync();
+
+                try
+                {
+                    if (response.Students != null)
+                    {
+                        allStudents.AddRange(response.Students);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error occurred while getting students for classroom {courseId}: {ex.Message}");
+                }
+
+                nextPageToken = response.NextPageToken;
+            } while (nextPageToken != null);
+
+            return allStudents;
+        }
+        public static string GetCourseName(string courseId)
+        {
+            var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();
+            return DirectoryManager.SanitizeFolderName(course.Name);
+        }
+    }
+}
+﻿namespace TLH;
+public static class ConsoleExtensions
+{
+    public static void WriteLine(string value, ConsoleColor color)
+    {
+        var defaultColor = Console.ForegroundColor;
+        Console.ForegroundColor = color;
+        Console.WriteLine(value);
+        Console.ForegroundColor = defaultColor;
+    }
+}
+﻿using Google.Apis.Classroom.v1.Data;
+using System.Runtime.CompilerServices;
+
+namespace TLH.Data
+{
+    public static class DataCollector
+    {
+        public static async Task CollectData()
+        {
+            //First we extract each student text data from all their files.
+            StudentTextExtractor ste = new StudentTextExtractor();
+            string courseId = await ClassroomApiHelper.SelectClassroomAndGetId();
+            var StudentTextData = ste.ExtractTextFromStudentAssignments(courseId);
+
+            //Then we Create a List that will hold all the Assignments from Teachers.
+
+            //Then we Gather the prompts we are interested in using.
+
+            //Then we Gather the Json file that contains the template for the grades.
+
+            //Before we send the text data to the prompt we will use we will have too count the tokens and add the right amount of tokens too a chunck list.
+
+            //Now we loop through each student and send their text data to the right prompt.
+
+            //In the loop we will send the text and the prompts to Open ai
+
+
+
+        }
+    }
+}
+﻿namespace TLH.Data
+{
+    public static class Prooompting
+    {
+        public static string TeacherFörhållningsätt = "Hej";
+        public static string Uppgiften = "På";
+        public static string ElevensInlämnadeUppgift = "Dig";
+
+        public static void CalculateTokens()
+        {
+            string text = TeacherFörhållningsätt + Uppgiften + ElevensInlämnadeUppgift;
+            //int tokenCount = CountTokens("");
+            //Console.WriteLine($"The number of tokens in the text is: {tokenCount}");
+        }
+    }
+}
+﻿using GPT_3_Encoder_Sharp;
+using SharpToken;
+
+namespace GPT3Example
+{
+    public class TokenCounters
+    {
+        public static void GPT3EncoderSharp(String countText)
+        {
+            Console.WriteLine();
+            Console.WriteLine("GPT3EncoderSharp");
+            //Link Repo: https://github.com/Alex1911-Jiang/GPT-3-Encoder-Sharp
+            Encoder encoder = Encoder.Get_Encoder();
+            var encoded = encoder.Encode(countText);
+            Console.WriteLine();
+            Console.WriteLine("encoded is: \r\n" + string.Join(',', encoded));
+            Console.WriteLine($"Tokens: {encoded.Count()}, Characters: {countText.Length}");
+            Console.WriteLine("decoded is: \r\n" + encoder.Decode(encoded));
+        }
+        public static void SharpTopkenCounter(String countText)
+        {
+            Console.WriteLine();
+            Console.WriteLine("SharpTopkenCounter");
+
+            //Link Repo: https://github.com/dmitry-brazhenko/SharpToken
+
+            // Get encoding by encoding name
+            var encodingClk = GptEncoding.GetEncoding("cl100k_base");
+
+            // Get encoding by model name
+            var encodingGpt4 = GptEncoding.GetEncodingForModel("gpt-4");
+
+            // Get encoding by model name
+            var encodingGpt3 = GptEncoding.GetEncodingForModel("gpt-3.5-turbo");
+
+            // Get encoding by model name
+            var textdavinci = GptEncoding.GetEncodingForModel("text-davinci-003");
+
+            var eclk = encodingClk.Encode(countText);
+            var egpt4 = encodingGpt4.Encode(countText);
+            var egpt3t = encodingGpt3.Encode(countText);
+            var td003 = textdavinci.Encode(countText);
+
+            int countEclk = CountInts(eclk);
+            int countEgpt4 = CountInts(egpt4);
+            int countEgpt3t = CountInts(egpt3t);
+            int counttd003 = CountInts(td003);
+
+            Console.WriteLine($"Number of tokens in clk: {countEclk}");
+            Console.WriteLine($"Number of tokens in gpt4: {countEgpt4}");
+            Console.WriteLine($"Number of tokens in gpt3t: {countEgpt3t}");
+            Console.WriteLine($"Number of tokens in td003: {counttd003}");
+        }
+
+        private static int CountInts(List<int> list)
+        {
+            int count = 0;
+            foreach (int i in list)
+            {
+                count++;
+            }
+            return count;
+        }
+    }
+}
+﻿using Google.Apis.Classroom.v1.Data;
+using System.Text.RegularExpressions;
+using TLH;
+
+//This class Creates all folders on the Local Computer for a Teachers classroom, courses, assignments and students.
+public class DirectoryManager
+{
+    public const int MaxPathLength = 260;
+    public const int MinFileNameLength = 5;
+
+    public static string ShortenPath(string path, int maxLength = MaxPathLength)
+    {
+        if (path == null)
+        {
+            throw new ArgumentNullException(nameof(path));
+        }
+
+        var fileName = Path.GetFileName(path);
+        var directory = Path.GetDirectoryName(path);
+
+        if (directory == null)
+        {
+            throw new InvalidOperationException("The directory in the provided path is null.");
+        }
+
+        if (path.Length <= maxLength)
+        {
+            return path;
+        }
+
+        int allowedLengthForName = maxLength - directory.Length - 1; // -1 for the path separator
+
+        if (allowedLengthForName < MinFileNameLength)
+        {
+            throw new InvalidOperationException($"Path is too long, and shortening would result in a file name with less than {MinFileNameLength} characters.");
+        }
+
+        var shortenedFileName = ShortenFileName(fileName, allowedLengthForName);
+        return Path.Combine(directory, shortenedFileName);
+    }
+    public static string ShortenFileName(string fileName, int allowedLength)
+    {
+        if (fileName.Length <= allowedLength)
+        {
+            return fileName;
+        }
+
+        var extension = Path.GetExtension(fileName);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        var shortenedFileNameWithoutExtension = fileNameWithoutExtension.Substring(0, allowedLength - extension.Length);
+        return $"{shortenedFileNameWithoutExtension}{extension}";
+    }
+    private static (string, bool) CreateDirectory(string parentDirectory, string folderName)
+    {
+        var directoryPath = Path.Combine(parentDirectory, SanitizeFolderName(folderName));
+
+        bool isNewlyCreated = !Directory.Exists(directoryPath);
+        Directory.CreateDirectory(directoryPath);
+
+        return (directoryPath, isNewlyCreated);
+    }
+    public static string CreateUserDirectoryOnDesktop()
+    {
+        Program.userPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var (userDirectory, _) = CreateDirectory(Program.userPathLocation, Environment.UserName);
+        return userDirectory;
+    }
+    public static string CreateCourseDirectory(string courseId)
+    {
+        if (Program.userPathLocation == null)
+        {
+            // Handle the null case, for example, by returning an empty string
+            return string.Empty;
+        }
+
+        var course = ClassroomApiHelper.GetCourse(courseId).Result;
+        var courseName = DirectoryManager.SanitizeFolderName(course.Name);
+        var courseDirectory = Path.Combine(Program.userPathLocation, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
+        Directory.CreateDirectory(courseDirectory);
+
+        return courseDirectory;
+    }
+    public static string CreateStudentDirectory(string courseDirectory, Student student)
+    {
+        var studentName = SanitizeFolderName(student.Profile.Name.FullName);
+        var (studentDirectory, isNewlyCreated) = CreateDirectory(courseDirectory, studentName);
+
+        if (isNewlyCreated)
+        {
+            Console.WriteLine($"Created directory for student: {studentName}");
+        }
+
+        return studentDirectory;
+    }
+    public static string CreateAssignmentDirectory(string studentDirectory, CourseWork courseWork, string courseId)
+    {
+        var assignmentName = SanitizeFolderName(courseWork.Title);
+        var assignmentDirectory = Path.Combine(studentDirectory, $"{assignmentName}");
+        Directory.CreateDirectory(assignmentDirectory);
+
+        return assignmentDirectory;
+    }
+    public static string SanitizeFolderName(string folderName)
+    {
+        var invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+        var regex = new Regex($"[{Regex.Escape(invalidChars)}]");
+        return regex.Replace(folderName, "_");
+    }
+}
+using Google.Apis.Classroom.v1.Data;
+using Google.Apis.Download;
+
+namespace TLH
+{
+    public class DownloadService
+    {
+        public static async Task DownloadAllFilesFromClassroom(string courseId)
+        {
+            // We have to add checks so download is not happening if files are already downloaded.
+            string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId);
+
+            var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
+            foreach (var courseWork in courseWorkList)
+            {
+                await DownloadCourseWorkFiles(courseId, courseWork, courseDirectory);
+            }
+        }
+        public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory)
+        {
+            var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id);
+            foreach (var submission in studentSubmissions)
+            {
+                var student = await ClassroomApiHelper.GetStudent(courseId, submission.UserId);
+                var studentDirectory = Path.Combine(courseDirectory, DirectoryManager.SanitizeFolderName(student.Profile.Name.FullName));
+                Directory.CreateDirectory(studentDirectory);
+
+                if (submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0)
+                {
+                    var assignmentDirectory = Path.Combine(studentDirectory, DirectoryManager.SanitizeFolderName(courseWork.Title));
+                    Directory.CreateDirectory(assignmentDirectory);
+
+                    await DownloadAttachmentsForSubmission(submission, assignmentDirectory, student);
+                }
+            }
+        }
+        public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student)
+        {
+            if (submission.AssignmentSubmission?.Attachments == null || submission.AssignmentSubmission.Attachments.Count == 0)
+            {
+                return;
+            }
+
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return;
+            }
+
+            foreach (var attachment in submission.AssignmentSubmission.Attachments)
+            {
+                if (attachment?.DriveFile?.Id != null)
+                {
+                    // Handle Google Drive file attachments
+                    var fileId = attachment.DriveFile.Id;
+                    var fileName = attachment.DriveFile.Title;
+
+                    // Get the mimeType of the file
+                    var mimeType = await GetFileMimeTypeFromGoogleDrive(fileId);
+
+                    await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, mimeType);
+                }
+                else if (attachment?.Link != null)
+                {
+                    // Handle link attachments
+                    var link = attachment.Link.Url;
+                    var linkFileName = "link_" + student.UserId + ".txt";
+                    var linkFilePath = Path.Combine(destinationDirectory, linkFileName);
+
+                    try
+                    {
+                        using (StreamWriter writer = new StreamWriter(linkFilePath, true))
+                        {
+                            await writer.WriteLineAsync(link);
+                        }
+                        Console.WriteLine($"Saved link for student {student.Profile.Name.FullName} to: {linkFilePath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error saving link for student {student.Profile.Name.FullName}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, string? mimeType = null)
+        {
+            var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
+            fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
+
+            var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
+            var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
+
+            // Check if the file exists
+            if (File.Exists(filePath))
+            {
+                var localFileModifiedTime = File.GetLastWriteTimeUtc(filePath);
+                var googleDriveFileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
+
+                Console.WriteLine($"Local file {fileName} modified time: {localFileModifiedTime}");
+                // Add this line to print the Google Classroom file modified time in the correct format
+                Console.WriteLine($"Google Classroom file {fileName} modified time: {googleDriveFileModifiedTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}");
+
+                // Check if the Google Classroom file is newer than the local file
+                if (googleDriveFileModifiedTime.HasValue && googleDriveFileModifiedTime.Value <= localFileModifiedTime)
+                {
+                    Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
+                    return;
+                }
+            }
+            // Download the file
+            var stream = new MemoryStream();
+
+            if (!string.IsNullOrEmpty(exportMimeType))
+            {
+                var exportRequest = GoogleApiHelper.DriveService.Files.Export(fileId, exportMimeType);
+                exportRequest.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+                {
+                    HandleDownloadProgress(progress, fileName);
+                };
+                await exportRequest.DownloadAsync(stream);
+            }
+            else
+            {
+                var getRequest = GoogleApiHelper.DriveService.Files.Get(fileId);
+                getRequest.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+                {
+                    HandleDownloadProgress(progress, fileName);
+                };
+                await getRequest.DownloadAsync(stream);
+            }
+
+            // Reset the stream position to the beginning
+            stream.Seek(0, SeekOrigin.Begin);
+
+            // Save the downloaded file to the destination directory
+            Console.WriteLine($"Saving file to: {filePath}");
+
+            try
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                {
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
+            }
+        }
+        public static async Task<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var request = GoogleApiHelper.DriveService.Files.Get(fileId);
+                request.Fields = "modifiedTime, name"; // Add this line to specify the fields you want to retrieve
+                var file = await request.ExecuteAsync();
+
+                if (file == null)
+                {
+                    Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    return null;
+                }
+
+                Console.WriteLine($"File {file.Name} modified time: {file.ModifiedTime?.ToUniversalTime()}");
+
+                return file.ModifiedTime?.ToUniversalTime(); // Convert the modified time to UTC
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving modified time for file ID {fileId}: {ex.Message}");
+                return null;
+            }
+        }
+        public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var file = await GoogleApiHelper.DriveService.Files.Get(fileId).ExecuteAsync();
+                return file.MimeType;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving mimeType for file ID {fileId}: {ex.Message}");
+                return null;
+            }
+        }
+        private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
+        {
+            string exportMimeType = "";
+            string fileExtension = "";
+
+            if (mimeType == "application/vnd.google-apps.document")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                fileExtension = ".docx";
+            }
+            else if (mimeType == "application/vnd.google-apps.spreadsheet")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                fileExtension = ".xlsx";
+            }
+            else if (mimeType == "application/vnd.google-apps.presentation")
+            {
+                exportMimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+                fileExtension = ".pptx";
+            }
+            else
+            {
+                fileExtension = Path.GetExtension(fileName);
+            }
+
+            return (exportMimeType, fileExtension);
+        }
+        private static void HandleDownloadProgress(IDownloadProgress progress, string fileName)
+        {
+            switch (progress.Status)
+            {
+                case DownloadStatus.Downloading:
+                    {
+                        Console.WriteLine($"Downloading {fileName} ({progress.BytesDownloaded} bytes downloaded)");
+                        break;
+                    }
+                case DownloadStatus.Completed:
+                    {
+                        Console.WriteLine($"Downloaded {fileName}");
+                        break;
+                    }
+                case DownloadStatus.Failed:
+                    {
+                        Console.WriteLine($"Download failed for {fileName}: {progress.Exception?.Message}");
+                        break;
+                    }
+            }
+        }
+    }
+}
+﻿using Google.Apis.Download;
+using Google.Apis.Drive.v3;
+public static class DriveServiceExtensions
+{
+    public static void DownloadWithStatus(this FilesResource.GetRequest request, MemoryStream memoryStream)
+    {
+        request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+        {
+            switch (progress.Status)
+            {
+                case DownloadStatus.Downloading:
+                    Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
+                    break;
+
+                case DownloadStatus.Completed:
+                    Console.WriteLine($"Download complete: {request.FileId}");
+                    memoryStream.Position = 0;
+                    break;
+
+                case DownloadStatus.Failed:
+                    Console.WriteLine($"Download failed: {request.FileId}");
+                    break;
+            }
+        };
+        request.Download(memoryStream);
+    }
+    public static void DownloadWithStatus(this FilesResource.ExportRequest request, MemoryStream memoryStream)
+    {
+        request.MediaDownloader.ProgressChanged += (IDownloadProgress progress) =>
+        {
+            switch (progress.Status)
+            {
+                case DownloadStatus.Downloading:
+                    Console.WriteLine($"Downloading {request.FileId}: {progress.BytesDownloaded} bytes.");
+                    break;
+
+                case DownloadStatus.Completed:
+                    Console.WriteLine($"Download complete: {request.FileId}");
+                    memoryStream.Position = 0;
+                    break;
+
+                case DownloadStatus.Failed:
+                    Console.WriteLine($"Download failed: {request.FileId}");
+                    break;
+            }
+        };
+        request.Download(memoryStream);
+    }
+}
+﻿using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Classroom.v1;
+using Google.Apis.Drive.v3;
+using Google.Apis.Services;
+using Google.Apis.Util.Store;
+
+namespace TLH
+{
+    public static class GoogleApiHelper
+    {
+        private static readonly string[] scopes = {
+            ClassroomService.Scope.ClassroomCoursesReadonly,
+            ClassroomService.Scope.ClassroomCourseworkMe,
+            ClassroomService.Scope.ClassroomCourseworkStudents,
+            ClassroomService.Scope.ClassroomRosters,
+            ClassroomService.Scope.ClassroomProfileEmails,
+            ClassroomService.Scope.ClassroomAnnouncementsReadonly,
+            ClassroomService.Scope.ClassroomCourseworkStudentsReadonly,
+            DriveService.Scope.Drive,
+        };
+        public static ClassroomService ClassroomService { get; private set; } = new ClassroomService(new BaseClientService.Initializer());
+        public static DriveService DriveService { get; private set; } = new DriveService(new BaseClientService.Initializer());
+        public static void InitializeGoogleServices()
+        {
+            UserCredential credential;
+            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            {
+                string credPath = "token.json";
+                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    clientSecrets,
+                    scopes,
+                    "user",
+                    CancellationToken.None,
+                    new FileDataStore(credPath, true)).Result;
+            }
+            if (credential == null)
+            {
+                Console.WriteLine("Failed to authenticate. Please log in with your Google account.");
+                return;
+            }
+            // initialize Classroom and Drive services
+            ClassroomService = new ClassroomService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "YourApplicationNameHere"
+            });
+
+            DriveService = new DriveService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "YourApplicationNameHere"
+            });
+        }
+        public static void RefreshAccessToken(UserCredential credential)
+        {
+            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            {
+                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+                credential = new UserCredential(new GoogleAuthorizationCodeFlow(
+                    new GoogleAuthorizationCodeFlow.Initializer
+                    {
+                        ClientSecrets = clientSecrets
+                    }),
+                    "user",
+                    new TokenResponse { RefreshToken = credential.Token.RefreshToken }
+                );
+            }
+            if (credential == null)
+            {
+                Console.WriteLine("Failed to refresh access token. Please log in with your Google account.");
+                return;
+            }
+            // create new Classroom and Drive services with refreshed credential
+            var newClassroomService = new ClassroomService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "YourApplicationNameHere"
+            });
+            var newDriveService = new DriveService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "YourApplicationNameHere"
+            });
+
+            // assign new services to existing objects
+            ClassroomService = newClassroomService;
+            DriveService = newDriveService;
+        }
+    }
+}
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("TLH")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyProductAttribute("TLH")]
+[assembly: System.Reflection.AssemblyTitleAttribute("TLH")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// <auto-generated/>
+global using global::System;
+global using global::System.Collections.Generic;
+global using global::System.IO;
+global using global::System.Linq;
+global using global::System.Net.Http;
+global using global::System.Threading;
+global using global::System.Threading.Tasks;
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("TLH")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyProductAttribute("TLH")]
+[assembly: System.Reflection.AssemblyTitleAttribute("TLH")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// <auto-generated/>
+global using global::System;
+global using global::System.Collections.Generic;
+global using global::System.IO;
+global using global::System.Linq;
+global using global::System.Net.Http;
+global using global::System.Threading;
+global using global::System.Threading.Tasks;
+
+﻿using OpenAI.GPT3;
+using OpenAI.GPT3.Interfaces;
+using OpenAI.GPT3.Managers;
+using OpenAI.GPT3.ObjectModels;
+using OpenAI.GPT3.ObjectModels.RequestModels;
+using TLH.Data;
+
+namespace TLH
+{
+    public class OpenAiApiHelper
+    {
+        public IOpenAIService Connect()
+        {
+            // Get the API key from the environment variable "OPENAI_API_KEY".
+            var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                // Throw an exception if the environment variable is not set.
+                throw new Exception("OPENAI_API_KEY environment variable is not set.");
+            }
+
+            // Create an OpenAI service with the API key.
+            var openAiService = new OpenAIService(new OpenAiOptions()
+            {
+                ApiKey = apiKey
+            });
+
+            return openAiService;
+        }
+        public static async Task RunSimpleCompletionStreamTest(IOpenAIService sdk)
+        {
+            ConsoleExtensions.WriteLine("Chat Completion Stream Testing is starting:", ConsoleColor.Cyan);
+            try
+            {
+                ConsoleExtensions.WriteLine("Chat Completion Stream Test:", ConsoleColor.DarkCyan);
+                var completionResult = sdk.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
+                {
+                    Messages = new List<ChatMessage>
+                {
+                    new(StaticValues.ChatMessageRoles.System, Prooompting.TeacherFörhållningsätt),
+                    new(StaticValues.ChatMessageRoles.Assistant, Prooompting.Uppgiften),
+                    new(StaticValues.ChatMessageRoles.User, Prooompting.ElevensInlämnadeUppgift),
+                },
+                    MaxTokens = 3760,
+                    Model = Models.ChatGpt3_5Turbo
+                });
+
+                await foreach (var completion in completionResult)
+                {
+                    if (completion.Successful)
+                    {
+                        Console.Write(completion.Choices.First().Message.Content);
+                    }
+                    else
+                    {
+                        if (completion.Error == null)
+                        {
+                            throw new Exception("Unknown Error");
+                        }
+
+                        Console.WriteLine($"{completion.Error.Code}: {completion.Error.Message}");
+                    }
+                }
+
+                Console.WriteLine("");
+                Console.WriteLine("Complete");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+    }
+}
+﻿namespace TLH
+{
+    public static class Program
+    {
+        public static string? userPathLocation;
+
+        private static async Task Main(string[] args)
+        {
+            userPathLocation = DirectoryManager.CreateUserDirectoryOnDesktop();
+            GoogleApiHelper.InitializeGoogleServices();
+            await Start();
+        }
+        public static async Task Start()
+        {
+            Console.WriteLine("Welcome to the Classroom File Downloader!");
+            Console.WriteLine("Press Escape to exit the program at any time.");
+
+            while (true)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Press 1 to select a classroom and download files.");
+                Console.WriteLine("Press 2 to evaluate all student's");
+                Console.WriteLine("Press 3 to grade a course.");
+                Console.WriteLine("Press Escape to exit.");
+                var key = Console.ReadKey(true).Key;
+
+                if (key == ConsoleKey.Escape)
+                {
+                    break;
+                }
+
+                switch (key)
+                {
+                    case ConsoleKey.D1:
+                        await ClassroomApiHelper.SelectClassroomAndGetId();
+                        break;
+
+                    case ConsoleKey.D2:
+                        StudentEvaluation.LookForUserFolder();
+                        break;
+
+                    case ConsoleKey.D3:
+                        StudentTextExtractor ste = new StudentTextExtractor();
+                        await ste.ExtractAndPrintTextData();
+
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid input. Please try again.");
+                        break;
+                }
+            }
+        }
+    }
+}
+﻿using Google.Apis.Classroom.v1;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using TLH;
+
+//This Class creates a Local Excel file with all the data Gathered from the folders crated on the Local Computer.
+public static class StudentEvaluation
+{
+    //TODO:Vi behöver kanske skapa en klass till. En klass för Bedömmande, och en annan för att skapa sätta upp filer och managa dessa filer på rätt sätt, visa data hämta extraherea data är olika saker. Kan fråga chat gpt om vad som skall göra vad och hur vi behöver dela upp det så att det känns logiskt.
+    public static void LookForUserFolder()
+    {
+        // Get the current user's name
+        string userName = Environment.UserName;
+
+        // Get the path to the user's desktop folder
+        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+
+        // Combine the desktop path with the user's name to get the expected folder path
+        string userFolderPath = Path.Combine(desktopPath, userName);
+
+        // Check if the user folder exists
+        if (Directory.Exists(userFolderPath))
+        {
+            Console.WriteLine($"User folder for {userName} found on desktop.");
+
+            // Generate the student list Excel file
+            GenerateStudentAssignment(userFolderPath);
+        }
+        else
+        {
+            Console.WriteLine();
+            Console.WriteLine($"User folder for {userName} not found on desktop.");
+        }
+    }
+    private static Dictionary<string, List<string>>? GetAllUniqueAssignmentNames()
+    {
+        var allAssignmentNamesByCourse = new Dictionary<string, List<string>>();
+
+        // Retrieve a list of all active courses
+        var request = GoogleApiHelper.ClassroomService.Courses.List();
+        request.TeacherId = "me";
+        request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
+        var courses = request.Execute().Courses;
+
+        // Loop through each course and retrieve its assignments
+        foreach (var course in courses)
+        {
+            // Retrieve the list of assignments for the current course
+            var request2 = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(course.Id);
+            request2.OrderBy = "dueDate asc";
+            var response2 = request2.Execute();
+            var assignments = response2.CourseWork;
+
+            // Check if the assignments object is null
+            if (assignments != null)
+            {
+                // Create a list to store the unique assignment names for the current course
+                var uniqueAssignmentNames = new List<string>();
+
+                // Loop through each assignment and add its name to the list
+                foreach (var assignment in assignments)
+                {
+                    uniqueAssignmentNames.Add(assignment.Title);
+                }
+
+                // Add the unique assignment names for the current course to the dictionary
+                allAssignmentNamesByCourse.Add($"{course.Name}_{course.Id}", uniqueAssignmentNames.Distinct().ToList());
+            }
+            else
+            {
+                // Handle the case where there are no assignments for the current course
+                // or there was an error retrieving the assignments
+            }
+        }
+
+        return allAssignmentNamesByCourse;
+    }
+    public static async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractStructuredTextFromAssignments(string courseId)
+    {
+        // Create an instance of the StudentTextExtractor class
+        var studentTextExtractor = new StudentTextExtractor();
+
+        // Call the ExtractTextFromStudentAssignmentsAsync method
+        var extractedTextData = await studentTextExtractor.ExtractTextFromStudentAssignments(courseId);
+
+        return extractedTextData ?? new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
+    }
+    public static void GenerateStudentAssignment(string mainFolderPath)
+    {
+        // Set the EPPlus license context to NonCommercial
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        // Create a new Excel package
+        using (var excelPackage = new ExcelPackage())
+        {
+            // Get a list of all unique assignment names for all courses
+            var allUniqueAssignmentNamesByCourse = GetAllUniqueAssignmentNames();
+
+            if (allUniqueAssignmentNamesByCourse != null)
+            {
+                // Get a list of all class folders within the main folder
+                string[] classFolders = Directory.GetDirectories(mainFolderPath);
+
+                // Loop through each class folder
+                foreach (string classFolder in classFolders)
+                {
+                    // Get the class name from the folder name
+                    string className = Path.GetFileName(classFolder);
+
+                    // Get a list of all unique assignment names for the current class
+                    if (allUniqueAssignmentNamesByCourse.TryGetValue(className, out var allUniqueAssignmentNames))
+                    {
+                        // Get a list of all student folders within the class folder
+                        string[] studentFolders = Directory.GetDirectories(classFolder);
+
+                        // Add a new worksheet to the Excel package for the current class
+                        var worksheet = excelPackage.Workbook.Worksheets.Add(className);
+
+                        // Set the horizontal alignment for the entire worksheet
+                        SetHorizontalAlignment(worksheet);
+
+                        // Set the header row for the worksheet
+                        SetHeaderRow(worksheet);
+
+                        int column = 2;
+
+                        // Add assignments to the worksheet
+                        foreach (var assignmentName in allUniqueAssignmentNames)
+                        {
+                            string sanitizedAssignmentName = DirectoryManager.SanitizeFolderName(assignmentName);
+                            worksheet.Cells[1, column].Value = sanitizedAssignmentName;
+                            column++;
+                        }
+
+                        // Add student data to the worksheet
+                        AddStudentData(worksheet, studentFolders);
+
+                        // Apply conditional formatting to the worksheet
+                        SetConditionalFormatting(worksheet);
+
+                        // Auto-fit column widths
+                        worksheet.Cells.AutoFitColumns();
+                    }
+                    else
+                    {
+                        // Handle the case where the className key is not found in the dictionary
+                    }
+                }
+
+                // Save the Excel file to disk
+                FileInfo excelFile = new FileInfo(Path.Combine(mainFolderPath, "StudentAssignments.xlsx"));
+                excelPackage.SaveAs(excelFile);
+            }
+            else
+            {
+                // Handle the case where allUniqueAssignmentNamesByCourse is null
+            }
+        }
+    }
+    private static void SetHorizontalAlignment(ExcelWorksheet worksheet)
+    {
+        worksheet.Cells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+    }
+    private static void SetHeaderRow(ExcelWorksheet worksheet)
+    {
+        worksheet.Cells[1, 1].Value = "Student";
+    }
+    private static void AddStudentData(ExcelWorksheet worksheet, string[] studentFolders)
+    {
+        // Initialize a row counter
+        int row = 2;
+
+        // Loop through each student folder
+        foreach (string studentFolder in studentFolders)
+        {
+            // Get the student name from the folder name
+            string studentName = Path.GetFileName(studentFolder);
+
+            if (studentName != null)
+            {
+                // Add the student name to the worksheet
+                worksheet.Cells[row, 1].Value = studentName;
+
+                // Loop through each assignment column
+                int column = 2;
+
+                while (worksheet.Cells[1, column].Value != null)
+                {
+                    string assignmentName = worksheet.Cells[1, column].Value?.ToString() ?? string.Empty;
+                    string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
+
+                    // Check if the student has files in the assignment folder
+                    if (Directory.Exists(studentAssignmentFolder))
+                    {
+                        int count = Directory.EnumerateFileSystemEntries(studentAssignmentFolder, "*", SearchOption.AllDirectories).Count();
+                        if (count > 0)
+                        {
+                            // Set the cell to the right of the student name to green
+                            using (var range = worksheet.Cells[row, column])
+                            {
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Green);
+                            }
+                        }
+                        else
+                        {
+                            // Set the cell to the right of the student name to red
+                            using (var range = worksheet.Cells[row, column])
+                            {
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Red);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Set the cell to the right of the student name to yellow (no folder found)
+                        using (var range = worksheet.Cells[row, column])
+                        {
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                        }
+                    }
+
+                    column++;
+                }
+
+                // Increment the row counter
+                row++;
+            }
+        }
+    }
+    private static void SetConditionalFormatting(ExcelWorksheet worksheet)
+    {
+        var conditionalFormatting = worksheet.ConditionalFormatting.AddExpression(worksheet.Cells[2, 2, worksheet.Dimension.Rows, 2]);
+        conditionalFormatting.Formula = $"COUNTIF(B2:B{worksheet.Dimension.Rows},\">0\")>0";
+        conditionalFormatting.Style.Fill.PatternType = ExcelFillStyle.Solid;
+        conditionalFormatting.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Red);
+        conditionalFormatting.Style.Fill.PatternColor.SetColor(System.Drawing.Color.Red);
+        conditionalFormatting.Style.Font.Color.SetColor(System.Drawing.Color.White);
+        conditionalFormatting.Style.Font.Bold = true;
+    }
+}
+﻿using System.Xml;
+using Xceed.Words.NET;
+
+namespace TLH
+{
+    internal class StudentTextExtractor
+    {
+        public StudentTextExtractor()
+        {
+            fileHandlers = new Dictionary<string, Func<string, string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".docx", ExtractTextFromDocx }
+            };
+
+            var textBasedExtensions = new List<string> { ".cs", ".txt", ".java", ".js", ".py", ".cpp" };
+
+            foreach (var ext in textBasedExtensions)
+            {
+                fileHandlers[ext] = ExtractTextFromTxt;
+            }
+        }
+
+        private Dictionary<string, Func<string, string>> fileHandlers;
+        public async Task ExtractAndPrintTextData()
+        {
+            var allStudentExtractedText = await ExtractTextFromStudentAssignments(await ClassroomApiHelper.SelectClassroomAndGetId());
+
+            if (allStudentExtractedText != null)
+            {
+                foreach (var student in allStudentExtractedText)
+                {
+                    Console.WriteLine(student.Key);
+                    foreach (var assignment in student.Value)
+                    {
+                        Console.WriteLine(assignment.Item1);
+
+                        // Join the text strings and print them as a whole
+                        string wholeText = string.Join(Environment.NewLine, assignment.Item2);
+                        Console.WriteLine(wholeText);
+                    }
+                }
+            }
+        }
+        public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
+        {
+            var userDirectory = Program.userPathLocation;
+            var courseName = ClassroomApiHelper.GetCourseName(courseId);
+
+            if (userDirectory == null || courseName == null)
+            {
+                Console.WriteLine("Error: User directory or course name is null.");
+                return null;
+            }
+            var courseFolderPath = Path.Combine(userDirectory, $"{DirectoryManager.SanitizeFolderName(courseName)}_{courseId}");
+
+            if (!Directory.Exists(courseFolderPath))
+            {
+                Console.WriteLine("The specified course folder does not exist on the Desktop.");
+                return null;
+            }
+
+            var students = await ClassroomApiHelper.GetActiveStudents(courseId);
+            var extractedTextData = new Dictionary<string, List<Tuple<bool, string, List<string>>>>();
+
+            foreach (var student in students)
+            {
+                var studentName = DirectoryManager.SanitizeFolderName(student.Profile.Name.FullName);
+                var studentFolderPath = Path.Combine(courseFolderPath, studentName);
+                var outputText = new List<Tuple<bool, string, List<string>>>();
+
+                foreach (var assignmentFolder in Directory.GetDirectories(studentFolderPath))
+                {
+                    var assignmentName = Path.GetFileName(assignmentFolder);
+                    var extractedTextList = new List<string>();
+
+                    foreach (var filePath in Directory.GetFiles(assignmentFolder))
+                    {
+                        var extractedText = ExtractTextFromFile(filePath);
+                        if (!string.IsNullOrEmpty(extractedText))
+                        {
+                            extractedTextList.Add(extractedText);
+                        }
+                    }
+
+                    outputText.Add(new Tuple<bool, string, List<string>>(true, assignmentName, extractedTextList));
+                }
+
+                var outputFileName = $"{studentName}_ExtractedText.docx";
+                var outputFileFullPath = Path.Combine(studentFolderPath, outputFileName);
+                SaveTextToWordFile(outputText, outputFileFullPath);
+
+                extractedTextData.Add(studentName, outputText);
+            }
+            return extractedTextData;
+        }
+        private string ExtractTextFromFile(string filePath)
+        {
+            try
+            {
+                string fileExtension = Path.GetExtension(filePath);
+
+                if (fileHandlers.TryGetValue(fileExtension, out var handler))
+                {
+                    string extractedText = handler(filePath);
+                    return RemoveInvalidXmlChars(extractedText);
+                }
+                else
+                {
+                    Console.WriteLine($"Unsupported file format '{fileExtension}' for file '{filePath}'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while processing the file '{filePath}': {ex.Message}");
+            }
+
+            return string.Empty;
+        }
+        private string ExtractTextFromTxt(string filePath)
+        {
+            return File.ReadAllText(filePath);
+        }
+        private string ExtractTextFromDocx(string filePath)
+        {
+            using (DocX document = DocX.Load(filePath))
+            {
+                return document.Text;
+            }
+        }
+        private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
+        {
+            // Create a new document.
+            using (DocX document = DocX.Create(filePath))
+            {
+                // Iterate through each tuple in the text data
+                foreach (var tuple in textData)
+                {
+                    if (tuple.Item1)
+                    {
+                        // Create a Heading 1 paragraph for the assignment name
+                        Xceed.Document.NET.Paragraph headingPara = document.InsertParagraph(tuple.Item2);
+                        headingPara.StyleId = "Heading1";
+
+                        // Create a paragraph for each line in the extracted text list
+                        foreach (var line in tuple.Item3)
+                        {
+                            document.InsertParagraph(line);
+                        }
+                    }
+                }
+
+                // Save the document.
+                document.Save();
+            }
+
+            Console.WriteLine("Document created successfully.");
+        }
+        private string RemoveInvalidXmlChars(string input)
+        {
+            var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();
+            return new string(validXmlChars);
+        }
+    }
+}
+
+
+Loaded .cs files:
+c:\Users\Josef\Documents\GitHub\TLH\TLH\ClassroomApiHelper.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\ConsoleExtensions.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\Data\DataCollector.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\Data\Prooompting.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\Data\TokenCounters.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\DirectoryManager.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\DownloadService.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\DriveServiceExtensions.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\GoogleApiHelper.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Debug\net6.0\TLH.AssemblyInfo.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Debug\net6.0\TLH.GlobalUsings.g.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Release\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Release\net6.0\TLH.AssemblyInfo.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\obj\Release\net6.0\TLH.GlobalUsings.g.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\OpenAiApiHelper.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\Program.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\StudentEvaluation.cs
+c:\Users\Josef\Documents\GitHub\TLH\TLH\StudentTextExtractor.cs
