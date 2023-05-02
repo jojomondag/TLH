@@ -1,14 +1,16 @@
-using Google.Apis.Classroom.v1.Data;
-using Google.Apis.Download;
+    using Google.Apis.Classroom.v1.Data;
+    using Google.Apis.Download;
+    using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
+
 
 namespace TLH
-{
+    {
     public class DownloadService
     {
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
             // We have to add checks so download is not happening if files are already downloaded.
-            string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId);
+            string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId.Trim());
 
             var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
             foreach (var courseWork in courseWorkList)
@@ -55,10 +57,10 @@ namespace TLH
                     var fileId = attachment.DriveFile.Id;
                     var fileName = attachment.DriveFile.Title;
 
-                    // Get the mimeType of the file
-                    var mimeType = await GetFileMimeTypeFromGoogleDrive(fileId);
+                    // Get the file object from Google Drive
+                    var file = await GetFileFromGoogleDrive(fileId);
 
-                    await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, mimeType);
+                    await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, file);
                 }
                 else if (attachment?.Link != null)
                 {
@@ -82,8 +84,18 @@ namespace TLH
                 }
             }
         }
-        public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, string? mimeType = null)
+        public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file)
+
         {
+            if (file == null)
+            {
+                Console.WriteLine($"Error: File with ID {fileId} not found.");
+                return;
+            }
+
+            string mimeType = file.MimeType;
+            DateTime? fileModifiedTime = file.ModifiedTime?.ToUniversalTime();
+
             var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
             fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
 
@@ -250,6 +262,34 @@ namespace TLH
                         Console.WriteLine($"Download failed for {fileName}: {progress.Exception?.Message}");
                         break;
                     }
+            }
+        }
+        public static async Task<GoogleDriveFile> GetFileFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var request = GoogleApiHelper.DriveService.Files.Get(fileId);
+                request.Fields = "mimeType, modifiedTime, name"; // Add this line to specify the fields you want to retrieve
+                var file = await request.ExecuteAsync();
+
+                if (file == null)
+                {
+                    Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    return null;
+                }
+
+                return file;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving file with ID {fileId}: {ex.Message}");
+                return null;
             }
         }
     }

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj": {}
+    "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj": {
+    "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
+        "projectUniqueName": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
         "projectName": "TLH",
-        "projectPath": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
-        "packagesPath": "C:\\Users\\Josef\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\obj\\",
+        "projectPath": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
+        "packagesPath": "C:\\Users\\josef.nobach\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Josef\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\josef.nobach\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
