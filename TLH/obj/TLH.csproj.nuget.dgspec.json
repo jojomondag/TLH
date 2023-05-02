@@ -67,6 +67,10 @@
               "target": "Package",
               "version": "[1.60.0, )"
             },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.60.0, )"
+            },
             "Google.Apis.Classroom.v1": {
               "target": "Package",
               "version": "[1.60.0.3001, )"

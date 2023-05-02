@@ -1,10 +1,29 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
+using Google.Apis.Auth;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Drive.v3;
+using Google.Apis.Util.Store;
 
 namespace TLH
 {
     public static class ClassroomApiHelper
     {
+        public static async Task<string> GetAccessTokenAsync()
+        {
+            UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                new ClientSecrets
+                {
+                    ClientId = "YOUR_CLIENT_ID",
+                    ClientSecret = "YOUR_CLIENT_SECRET",
+                },
+                new[] { ClassroomService.Scope.ClassroomCoursesReadonly, DriveService.Scope.Drive },
+                "user",
+                CancellationToken.None,
+                new FileDataStore("TLH.TokenCache"));
+
+            return credential.Token.AccessToken;
+        }
         public static T GetUserSelection<T>(IList<T> items, string displayMessage)
         {
             Console.WriteLine();
@@ -132,5 +151,94 @@ namespace TLH
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();
             return DirectoryManager.SanitizeFolderName(course.Name);
         }
+        public static async Task<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
+        {
+            if (GoogleApiHelper.DriveService == null)
+            {
+                Console.WriteLine("Error: Google Drive service is not initialized.");
+                return null;
+            }
+
+            try
+            {
+                var request = GoogleApiHelper.DriveService.Files.Get(fileId);
+                request.Fields = "modifiedTime, name"; // Add this line to specify the fields you want to retrieve
+                var file = await request.ExecuteAsync();
+
+                if (file == null)
+                {
+                    Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    return null;
+                }
+
+                return file.ModifiedTime?.ToUniversalTime(); // Convert the modified time to UTC
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving modified time for file ID {fileId}: {ex.Message}");
+                return null;
+            }
+        }
+        public static Dictionary<string, DateTime> GetAllDesktopFilesModifiedTime(string rootDirectory)
+        {
+            var fileModifiedTimes = new Dictionary<string, DateTime>();
+
+            foreach (var file in Directory.GetFiles(rootDirectory, "*.*", SearchOption.AllDirectories))
+            {
+                string fileName = Path.GetFileName(file);
+                DateTime fileModifiedTime = File.GetLastWriteTimeUtc(file);
+
+                if (!fileModifiedTimes.ContainsKey(fileName))
+                {
+                    fileModifiedTimes.Add(fileName, fileModifiedTime);
+                }
+                else
+                {
+                    // Key already exists, update the value
+                    fileModifiedTimes[fileName] = fileModifiedTime;
+                }
+            }
+
+            return fileModifiedTimes;
+        }
+        public static async Task<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
+        {
+            Dictionary<string, DateTime?> fileModifiedTimes = new Dictionary<string, DateTime?>();
+            var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
+
+            foreach (var courseWork in courseWorkList)
+            {
+                var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id);
+
+                foreach (var submission in studentSubmissions)
+                {
+                    if (submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0)
+                    {
+                        foreach (var attachment in submission.AssignmentSubmission.Attachments)
+                        {
+                            if (attachment?.DriveFile?.Id != null)
+                            {
+                                var fileId = attachment.DriveFile.Id;
+                                var fileName = attachment.DriveFile.Title;
+
+                                var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
+                                if (!fileModifiedTimes.ContainsKey(fileName))
+                                {
+                                    fileModifiedTimes.Add(fileName, fileModifiedTime);
+                                }
+                                else
+                                {
+                                    // Key already exists, update the value
+                                    fileModifiedTimes[fileName] = fileModifiedTime;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return fileModifiedTimes;
+        }
+
     }
 }
