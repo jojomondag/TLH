@@ -1,8 +1,6 @@
 using Google.Apis.Classroom.v1.Data;
 using Google.Apis.Download;
 using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
-using System.Net.Http;
-using System.Net.Http.Headers;
 
 namespace TLH
     {
@@ -71,9 +69,19 @@ namespace TLH
 
                     // Get the modified time of the Google Classroom file and the local file
                     var googleDriveFileModifiedTime = await ClassroomApiHelper.GetFileModifiedTimeFromGoogleDrive(fileId);
+                    
                     var desktopFileModifiedTime = File.GetLastWriteTimeUtc(Path.Combine(destinationDirectory, fileName));
 
-                    await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, file, googleDriveFileModifiedTime, desktopFileModifiedTime);
+                    var googleDriveFile = await GetFileFromGoogleDrive(fileId);
+
+                    if (googleDriveFile == null)
+                    {
+                        Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    }
+                    else
+                    {
+                        await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, googleDriveFile, googleDriveFileModifiedTime, desktopFileModifiedTime);
+                    }
                 }
                 else if (attachment?.Link != null)
                 {
@@ -139,7 +147,7 @@ namespace TLH
 
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", await ClassroomApiHelper.GetAccessTokenAsync());
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", GoogleApiHelper.Credential?.Token.AccessToken ?? "");
 
                 using (var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
                 {
@@ -226,7 +234,7 @@ namespace TLH
                 Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
             }
         }
-        public static async Task<GoogleDriveFile> GetFileFromGoogleDrive(string fileId)
+        public static async Task<GoogleDriveFile?> GetFileFromGoogleDrive(string fileId)
         {
             if (GoogleApiHelper.DriveService == null)
             {

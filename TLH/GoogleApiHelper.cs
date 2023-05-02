@@ -10,6 +10,8 @@ namespace TLH
 {
     public static class GoogleApiHelper
     {
+        public static UserCredential ?Credential { get; private set; }
+
         private static readonly string[] scopes = {
             ClassroomService.Scope.ClassroomCoursesReadonly,
             ClassroomService.Scope.ClassroomCourseworkMe,
@@ -36,6 +38,10 @@ namespace TLH
                     CancellationToken.None,
                     new FileDataStore(credPath, true)).Result;
             }
+
+            // Store the credential in the class property
+            Credential = credential;
+
             if (credential == null)
             {
                 Console.WriteLine("Failed to authenticate. Please log in with your Google account.");

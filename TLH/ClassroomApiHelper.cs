@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Util.Store;
@@ -9,21 +8,6 @@ namespace TLH
 {
     public static class ClassroomApiHelper
     {
-        public static async Task<string> GetAccessTokenAsync()
-        {
-            UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                new ClientSecrets
-                {
-                    ClientId = "YOUR_CLIENT_ID",
-                    ClientSecret = "YOUR_CLIENT_SECRET",
-                },
-                new[] { ClassroomService.Scope.ClassroomCoursesReadonly, DriveService.Scope.Drive },
-                "user",
-                CancellationToken.None,
-                new FileDataStore("TLH.TokenCache"));
-
-            return credential.Token.AccessToken;
-        }
         public static T GetUserSelection<T>(IList<T> items, string displayMessage)
         {
             Console.WriteLine();

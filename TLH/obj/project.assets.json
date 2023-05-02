@@ -1758,7 +1758,6 @@
       "EPPlus >= 6.2.0",
       "GPT-3-Encoder-Sharp >= 1.0.0",
       "Google.Apis >= 1.60.0",
-      "Google.Apis.Auth >= 1.60.0",
       "Google.Apis.Classroom.v1 >= 1.60.0.3001",
       "Google.Apis.Drive.v3 >= 1.60.0.2986",
       "SharpToken >= 1.0.26",
@@ -1767,19 +1766,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\josef.nobach\\.nuget\\packages\\": {}
+    "C:\\Users\\Josef\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
+      "projectUniqueName": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
       "projectName": "TLH",
-      "projectPath": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
-      "packagesPath": "C:\\Users\\josef.nobach\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\josef.nobach\\Documents\\GitHub\\TLH\\TLH\\obj\\",
+      "projectPath": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\TLH.csproj",
+      "packagesPath": "C:\\Users\\Josef\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\josef.nobach\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Josef\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -1829,10 +1828,6 @@
             "version": "[1.0.0, )"
           },
           "Google.Apis": {
-            "target": "Package",
-            "version": "[1.60.0, )"
-          },
-          "Google.Apis.Auth": {
             "target": "Package",
             "version": "[1.60.0, )"
           },
