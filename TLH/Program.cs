@@ -10,6 +10,7 @@
             GoogleApiHelper.InitializeGoogleServices();
             await Start();
         }
+
         public static async Task Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");

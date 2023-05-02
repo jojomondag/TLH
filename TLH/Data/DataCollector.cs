@@ -1,7 +1,4 @@
-﻿using Google.Apis.Classroom.v1.Data;
-using System.Runtime.CompilerServices;
-
-namespace TLH.Data
+﻿namespace TLH.Data
 {
     public static class DataCollector
     {
@@ -23,9 +20,6 @@ namespace TLH.Data
             //Now we loop through each student and send their text data to the right prompt.
 
             //In the loop we will send the text and the prompts to Open ai
-
-
-
         }
     }
 }

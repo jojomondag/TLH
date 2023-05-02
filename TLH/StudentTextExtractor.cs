@@ -21,6 +21,7 @@ namespace TLH
         }
 
         private Dictionary<string, Func<string, string>> fileHandlers;
+
         public async Task ExtractAndPrintTextData()
         {
             var allStudentExtractedText = await ExtractTextFromStudentAssignments(await ClassroomApiHelper.SelectClassroomAndGetId());
@@ -41,6 +42,7 @@ namespace TLH
                 }
             }
         }
+
         public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
         {
             var userDirectory = Program.userPathLocation;
@@ -93,6 +95,7 @@ namespace TLH
             }
             return extractedTextData;
         }
+
         private string ExtractTextFromFile(string filePath)
         {
             try
@@ -116,10 +119,12 @@ namespace TLH
 
             return string.Empty;
         }
+
         private string ExtractTextFromTxt(string filePath)
         {
             return File.ReadAllText(filePath);
         }
+
         private string ExtractTextFromDocx(string filePath)
         {
             using (DocX document = DocX.Load(filePath))
@@ -127,6 +132,7 @@ namespace TLH
                 return document.Text;
             }
         }
+
         private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
         {
             // Create a new document.
@@ -155,6 +161,7 @@ namespace TLH
 
             Console.WriteLine("Document created successfully.");
         }
+
         private string RemoveInvalidXmlChars(string input)
         {
             var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();

@@ -27,6 +27,7 @@ namespace TLH
 
             return openAiService;
         }
+
         public static async Task RunSimpleCompletionStreamTest(IOpenAIService sdk)
         {
             ConsoleExtensions.WriteLine("Chat Completion Stream Testing is starting:", ConsoleColor.Cyan);

@@ -10,7 +10,7 @@ namespace TLH
 {
     public static class GoogleApiHelper
     {
-        public static UserCredential ?Credential { get; private set; }
+        public static UserCredential? Credential { get; private set; }
 
         private static readonly string[] scopes = {
             ClassroomService.Scope.ClassroomCoursesReadonly,
@@ -22,16 +22,20 @@ namespace TLH
             ClassroomService.Scope.ClassroomCourseworkStudentsReadonly,
             DriveService.Scope.Drive,
         };
+
         public static ClassroomService ClassroomService { get; private set; } = new ClassroomService(new BaseClientService.Initializer());
         public static DriveService DriveService { get; private set; } = new DriveService(new BaseClientService.Initializer());
+
+        /// <summary>
+        /// Initializes the Google Classroom and Drive services using the credentials stored in credentials.json and token.json.
+        /// </summary>
         public static void InitializeGoogleServices()
         {
-            UserCredential credential;
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {
                 string credPath = "token.json";
                 var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                Credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
                     clientSecrets,
                     scopes,
                     "user",
@@ -39,33 +43,26 @@ namespace TLH
                     new FileDataStore(credPath, true)).Result;
             }
 
-            // Store the credential in the class property
-            Credential = credential;
-
-            if (credential == null)
-            {
-                Console.WriteLine("Failed to authenticate. Please log in with your Google account.");
-                return;
-            }
             // initialize Classroom and Drive services
             ClassroomService = new ClassroomService(new BaseClientService.Initializer()
             {
-                HttpClientInitializer = credential,
-                ApplicationName = "YourApplicationNameHere"
+                HttpClientInitializer = Credential,
+                ApplicationName = $"{nameof(InitializeGoogleServices)} - {nameof(ClassroomService)}"
             });
 
             DriveService = new DriveService(new BaseClientService.Initializer()
             {
-                HttpClientInitializer = credential,
-                ApplicationName = "YourApplicationNameHere"
+                HttpClientInitializer = Credential,
+                ApplicationName = $"{nameof(InitializeGoogleServices)} - {nameof(DriveService)}"
             });
         }
+
         public static void RefreshAccessToken(UserCredential credential)
         {
             using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {
                 var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                credential = new UserCredential(new GoogleAuthorizationCodeFlow(
+                var newCredential = new UserCredential(new GoogleAuthorizationCodeFlow(
                     new GoogleAuthorizationCodeFlow.Initializer
                     {
                         ClientSecrets = clientSecrets
@@ -73,27 +70,31 @@ namespace TLH
                     "user",
                     new TokenResponse { RefreshToken = credential.Token.RefreshToken }
                 );
-            }
-            if (credential == null)
-            {
-                Console.WriteLine("Failed to refresh access token. Please log in with your Google account.");
-                return;
-            }
-            // create new Classroom and Drive services with refreshed credential
-            var newClassroomService = new ClassroomService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = "YourApplicationNameHere"
-            });
-            var newDriveService = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = "YourApplicationNameHere"
-            });
+                // Revoke access token of old credential to prevent unauthorized access
+                var revokeTask = newCredential.RevokeTokenAsync(CancellationToken.None);
+                revokeTask.Wait();
+                if (revokeTask.Result)
+                {
+                    // Assign new credential to class property
+                    Credential = newCredential;
 
-            // assign new services to existing objects
-            ClassroomService = newClassroomService;
-            DriveService = newDriveService;
+                    // Create new Classroom and Drive services with refreshed credential
+                    ClassroomService = new ClassroomService(new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = Credential,
+                        ApplicationName = "TeachersLittleHelper"
+                    });
+                    DriveService = new DriveService(new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = Credential,
+                        ApplicationName = "TeachersLittleHelper"
+                    });
+                }
+                else
+                {
+                    Console.WriteLine("Failed to revoke access token. Please log in with your Google account.");
+                }
+            }
         }
     }
 }

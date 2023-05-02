@@ -17,6 +17,7 @@ namespace GPT3Example
             Console.WriteLine($"Tokens: {encoded.Count()}, Characters: {countText.Length}");
             Console.WriteLine("decoded is: \r\n" + encoder.Decode(encoded));
         }
+
         public static void SharpTopkenCounter(String countText)
         {
             Console.WriteLine();

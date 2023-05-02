@@ -3,46 +3,59 @@ using Google.Apis.Download;
 using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
 
 namespace TLH
-    {
+{
     public class DownloadService
     {
+        private static bool ShouldDownloadFile(string fileId, string fileName, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
+        {
+            var googleDriveFileModifiedTime = googleDriveFilesModifiedTime.GetValueOrDefault(fileId);
+            var desktopFileModifiedTime = desktopFilesModifiedTime.GetValueOrDefault(fileName);
+
+            var isDesktopFileUpToDate = desktopFileModifiedTime.HasValue && googleDriveFileModifiedTime.HasValue && desktopFileModifiedTime.Value >= googleDriveFileModifiedTime.Value;
+
+            return !isDesktopFileUpToDate;
+        }
+
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
             string courseDirectory = DirectoryManager.CreateCourseDirectory(courseId.Trim());
 
-            var googleDriveFilesModifiedTime = await ClassroomApiHelper.GetAllGoogleDriveFilesModifiedTime(courseId);
+            var googleDriveFilesModifiedTime = await ClassroomApiHelper.GetAllGoogleDriveFilesModifiedTime(courseId).ConfigureAwait(false);
             var desktopFilesModifiedTime = ClassroomApiHelper.GetAllDesktopFilesModifiedTime(courseDirectory);
 
-            // Update the type of the dictionary to match the expected parameter type
-            var googleDriveFilesModifiedTimeNullable = googleDriveFilesModifiedTime.ToDictionary(kv => kv.Key, kv => (DateTime?)kv.Value);
-            var desktopFilesModifiedTimeNullable = desktopFilesModifiedTime.ToDictionary(kv => kv.Key, kv => (DateTime?)kv.Value);
+            var googleDriveFilesModifiedTimeNullable = googleDriveFilesModifiedTime.ToDictionary(keyValue => keyValue.Key, keyValue => (DateTime?)keyValue.Value);
+            var desktopFilesModifiedTimeNullable = desktopFilesModifiedTime.ToDictionary(keyValue => keyValue.Key, keyValue => (DateTime?)keyValue.Value);
 
-            var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
+            var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId).ConfigureAwait(false);
             foreach (var courseWork in courseWorkList)
             {
-                await DownloadCourseWorkFiles(courseId, courseWork, courseDirectory, googleDriveFilesModifiedTimeNullable, desktopFilesModifiedTimeNullable);
+                await DownloadCourseWorkFiles(courseId, courseWork, courseDirectory, googleDriveFilesModifiedTimeNullable, desktopFilesModifiedTimeNullable).ConfigureAwait(false);
             }
         }
+
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
-            var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id);
-            var downloadOptions = new ParallelOptions { MaxDegreeOfParallelism = 4 }; // Change this number to limit the number of parallel downloads
+            var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id).ConfigureAwait(false);
+
+            const int maxDegreeOfParallelism = 4;
+            var downloadOptions = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
 
             foreach (var submission in studentSubmissions)
             {
-                var student = await ClassroomApiHelper.GetStudent(courseId, submission.UserId);
+                var student = await ClassroomApiHelper.GetStudent(courseId, submission.UserId).ConfigureAwait(false);
                 var studentDirectory = Path.Combine(courseDirectory, DirectoryManager.SanitizeFolderName(student.Profile.Name.FullName));
                 Directory.CreateDirectory(studentDirectory);
 
-                if (submission.AssignmentSubmission?.Attachments != null && submission.AssignmentSubmission.Attachments.Count > 0)
+                if (submission.AssignmentSubmission?.Attachments?.Count > 0)
                 {
                     var assignmentDirectory = Path.Combine(studentDirectory, DirectoryManager.SanitizeFolderName(courseWork.Title));
                     Directory.CreateDirectory(assignmentDirectory);
 
-                    await DownloadAttachmentsForSubmission(submission, assignmentDirectory, student, googleDriveFilesModifiedTime, desktopFilesModifiedTime);
+                    await DownloadAttachmentsForSubmission(submission, assignmentDirectory, student, googleDriveFilesModifiedTime, desktopFilesModifiedTime).ConfigureAwait(false);
                 }
             }
         }
+
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             if (submission.AssignmentSubmission?.Attachments == null || submission.AssignmentSubmission.Attachments.Count == 0)
@@ -64,23 +77,23 @@ namespace TLH
                     var fileId = attachment.DriveFile.Id;
                     var fileName = attachment.DriveFile.Title;
 
-                    // Get the file object from Google Drive
-                    var file = await GetFileFromGoogleDrive(fileId);
-
-                    // Get the modified time of the Google Classroom file and the local file
-                    var googleDriveFileModifiedTime = await ClassroomApiHelper.GetFileModifiedTimeFromGoogleDrive(fileId);
-                    
-                    var desktopFileModifiedTime = File.GetLastWriteTimeUtc(Path.Combine(destinationDirectory, fileName));
-
-                    var googleDriveFile = await GetFileFromGoogleDrive(fileId);
-
-                    if (googleDriveFile == null)
+                    // Check if the file should be downloaded
+                    if (ShouldDownloadFile(fileId, fileName, googleDriveFilesModifiedTime, desktopFilesModifiedTime))
                     {
-                        Console.WriteLine($"Error: File with ID {fileId} not found.");
+                        var googleDriveFile = await GetFileFromGoogleDrive(fileId).ConfigureAwait(false);
+
+                        if (googleDriveFile == null)
+                        {
+                            Console.WriteLine($"Error: File with ID {fileId} not found.");
+                        }
+                        else
+                        {
+                            await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, googleDriveFile).ConfigureAwait(false);
+                        }
                     }
                     else
                     {
-                        await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, googleDriveFile, googleDriveFileModifiedTime, desktopFileModifiedTime);
+                        Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
                     }
                 }
                 else if (attachment?.Link != null)
@@ -94,7 +107,7 @@ namespace TLH
                     {
                         using (StreamWriter writer = new StreamWriter(linkFilePath, true))
                         {
-                            await writer.WriteLineAsync(link);
+                            await writer.WriteLineAsync(link).ConfigureAwait(false);
                         }
                         Console.WriteLine($"Saved link for student {student.Profile.Name.FullName} to: {linkFilePath}");
                     }
@@ -105,9 +118,10 @@ namespace TLH
                 }
             });
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
-        public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file, DateTime? googleDriveFileModifiedTime, DateTime? desktopFileModifiedTime)
+
+        public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file)
         {
             if (file == null)
             {
@@ -122,17 +136,6 @@ namespace TLH
 
             var sanitizedFileName = DirectoryManager.SanitizeFolderName(fileName);
             var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
-
-            // Check if the file exists
-            if (File.Exists(filePath))
-            {
-                // Compare the Google Classroom file modified time with the local file modified time
-                if (googleDriveFileModifiedTime.HasValue && desktopFileModifiedTime.HasValue && googleDriveFileModifiedTime.Value <= desktopFileModifiedTime.Value)
-                {
-                    Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
-                    return;
-                }
-            }
 
             // Download the file using HttpClient
             string downloadUrl = "";
@@ -158,7 +161,7 @@ namespace TLH
 
                     try
                     {
-                        using (var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write))
+                        using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                         {
                             await response.Content.CopyToAsync(fileStream);
                         }
@@ -178,6 +181,7 @@ namespace TLH
                 }
             }
         }
+
         public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
         {
             if (GoogleApiHelper.DriveService == null)
@@ -197,6 +201,7 @@ namespace TLH
                 return null;
             }
         }
+
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
         {
             string exportMimeType = "";
@@ -208,14 +213,17 @@ namespace TLH
                     exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                     fileExtension = ".docx";
                     break;
+
                 case "application/vnd.google-apps.spreadsheet":
                     exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                     fileExtension = ".xlsx";
                     break;
+
                 case "application/vnd.google-apps.presentation":
                     exportMimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
                     fileExtension = ".pptx";
                     break;
+
                 default:
                     fileExtension = Path.GetExtension(fileName);
                     break;
@@ -223,6 +231,7 @@ namespace TLH
 
             return (exportMimeType, fileExtension);
         }
+
         private static void HandleDownloadProgress(IDownloadProgress progress, string fileName, bool isSkipped)
         {
             if (progress.Status == DownloadStatus.Failed)
@@ -234,6 +243,7 @@ namespace TLH
                 Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
             }
         }
+
         public static async Task<GoogleDriveFile?> GetFileFromGoogleDrive(string fileId)
         {
             if (GoogleApiHelper.DriveService == null)

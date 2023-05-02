@@ -1,61 +1,67 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Util.Store;
 
 namespace TLH
 {
     public static class ClassroomApiHelper
     {
-        public static T GetUserSelection<T>(IList<T> items, string displayMessage)
+        // Returns the user's selected item from a list.
+        public static T GetUserSelection<T>(IList<T> itemList, string displayMessage)
         {
             Console.WriteLine();
             Console.WriteLine(displayMessage);
 
-            for (int i = 0; i < items.Count; i++)
+            foreach (var item in itemList)
             {
-                if (items[i] is Course course)
+                if (item is Course course)
                 {
-                    Console.WriteLine($"{i + 1}. {course.Name}");
+                    Console.WriteLine($"{itemList.IndexOf(item) + 1}. {course.Name}");
                 }
-                else if (items[i] is Student student)
+                else if (item is Student student)
                 {
-                    Console.WriteLine($"{i + 1}. {student.Profile.Name.FullName}");
+                    Console.WriteLine($"{itemList.IndexOf(item) + 1}. {student.Profile.Name.FullName}");
                 }
             }
 
             int selection;
             while (true)
             {
-                if (int.TryParse(Console.ReadLine(), out selection) && selection > 0 && selection <= items.Count)
+                if (int.TryParse(Console.ReadLine(), out selection) && selection > 0 && selection <= itemList.Count)
                 {
-                    return items[selection - 1];
+                    return itemList[selection - 1];
                 }
                 Console.WriteLine("Invalid selection. Please try again.");
             }
         }
-        public static async Task<string> SelectClassroomAndGetId()
+
+        // Selects a classroom and returns its ID.
+        public static async ValueTask<string> SelectClassroomAndGetId()
         {
             var request = GoogleApiHelper.ClassroomService.Courses.List();
             request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
-            var response = request.Execute();
-            var selectedCourse = GetUserSelection<Course>(response.Courses, "Select a classroom by entering its number:");
+            var response = await request.ExecuteAsync();
+            var selectedCourse = GetUserSelection(response.Courses, "Select a classroom by entering its number:");
 
-            if (!string.IsNullOrEmpty(selectedCourse.Id))
+            if (string.IsNullOrWhiteSpace(selectedCourse.Id))
             {
-                await DownloadService.DownloadAllFilesFromClassroom(selectedCourse.Id);
-                Console.WriteLine("Press Enter to continue.");
-                Console.ReadLine();
+                return string.Empty;
             }
+
+            await DownloadService.DownloadAllFilesFromClassroom(selectedCourse.Id);
+            Console.WriteLine("Press Enter to continue.");
+            Console.ReadLine();
 
             return selectedCourse.Id;
         }
-        public static async Task<Course> GetCourse(string courseId)
+
+        // Returns the course with the specified ID.
+        public static async ValueTask<Course> GetCourse(string courseId)
         {
             return await GoogleApiHelper.ClassroomService.Courses.Get(courseId).ExecuteAsync();
         }
-        public static async Task<List<Course>> GetAllCourses()
+
+        // Returns a list of all the courses.
+        public static async ValueTask<IList<Course>> GetAllCourses()
         {
             var courses = new List<Course>();
             var request = GoogleApiHelper.ClassroomService.Courses.List();
@@ -64,15 +70,21 @@ namespace TLH
                 var response = await request.ExecuteAsync();
                 courses.AddRange(response.Courses);
                 request.PageToken = response.NextPageToken;
-            } while (!string.IsNullOrEmpty(request.PageToken));
+            } while (!string.IsNullOrWhiteSpace(request.PageToken));
 
             return courses;
         }
-        public static async Task<Student> GetStudent(string courseId, string userId)
+
+        // Returns the student with the specified user ID in the specified course.
+        public static async ValueTask<Student> GetStudent(string courseId, string userId)
         {
-            return await GoogleApiHelper.ClassroomService.Courses.Students.Get(courseId, userId).ExecuteAsync();
+            return await GoogleApiHelper.ClassroomService.Courses.Students
+                .Get(courseId, userId)
+                .ExecuteAsync();
         }
-        public static async Task<List<CourseWork>> ListCourseWork(string courseId)
+
+        // Returns a list of all the course work in the specified course.
+        public static async ValueTask<IList<CourseWork>> ListCourseWork(string courseId)
         {
             var courseWorks = new List<CourseWork>();
             var request = GoogleApiHelper.ClassroomService.Courses.CourseWork.List(courseId);
@@ -81,17 +93,22 @@ namespace TLH
                 var response = await request.ExecuteAsync();
                 courseWorks.AddRange(response.CourseWork);
                 request.PageToken = response.NextPageToken;
-            } while (!string.IsNullOrEmpty(request.PageToken));
+            } while (!string.IsNullOrWhiteSpace(request.PageToken));
 
             return courseWorks;
         }
-        public static async Task<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
+
+        // Returns a list of all the student submissions for the specified course work in the specified course.
+        public static async ValueTask<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
         {
-            var request = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions.List(courseId, courseWorkId);
+            var request = GoogleApiHelper.ClassroomService.Courses.CourseWork.StudentSubmissions
+                .List(courseId, courseWorkId);
             var response = await request.ExecuteAsync();
             return response.StudentSubmissions;
         }
-        public static async Task PrintActiveStudentsInClassroom(string courseId)
+
+        // Prints the active students in the specified course.
+        public static async ValueTask PrintActiveStudentsInClassroom(string courseId)
         {
             var activeStudents = await GetActiveStudents(courseId);
 
@@ -101,7 +118,9 @@ namespace TLH
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
-        public static async Task<IList<Student>> GetActiveStudents(string courseId)
+
+        // Returns a list of all the active students in the specified course.
+        public static async ValueTask<IList<Student>> GetActiveStudents(string courseId)
         {
             var allStudents = new List<Student>();
             string? nextPageToken = null;
@@ -126,16 +145,20 @@ namespace TLH
                 }
 
                 nextPageToken = response.NextPageToken;
-            } while (nextPageToken != null);
+            } while (!string.IsNullOrWhiteSpace(nextPageToken));
 
             return allStudents;
         }
+
+        // Returns the name of the specified course.
         public static string GetCourseName(string courseId)
         {
             var course = GoogleApiHelper.ClassroomService.Courses.Get(courseId).Execute();
             return DirectoryManager.SanitizeFolderName(course.Name);
         }
-        public static async Task<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
+
+        // Returns the modified time of the specified file in Google Drive.
+        public static async ValueTask<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
         {
             if (GoogleApiHelper.DriveService == null)
             {
@@ -163,6 +186,8 @@ namespace TLH
                 return null;
             }
         }
+
+        // Returns a dictionary of all the modified times of files in the specified directory on the user's desktop.
         public static Dictionary<string, DateTime> GetAllDesktopFilesModifiedTime(string rootDirectory)
         {
             var fileModifiedTimes = new Dictionary<string, DateTime>();
@@ -178,21 +203,22 @@ namespace TLH
                 }
                 else
                 {
-                    // Key already exists, update the value
                     fileModifiedTimes[fileName] = fileModifiedTime;
                 }
             }
 
             return fileModifiedTimes;
         }
-        public static async Task<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
-        {
-            Dictionary<string, DateTime?> fileModifiedTimes = new Dictionary<string, DateTime?>();
-            var courseWorkList = await ClassroomApiHelper.ListCourseWork(courseId);
 
-            foreach (var courseWork in courseWorkList)
+        // Returns a dictionary of all the modified times of files in the specified course in Google Drive.
+        public static async ValueTask<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
+        {
+            var fileModifiedTimes = new Dictionary<string, DateTime?>();
+            var courseWorks = await ListCourseWork(courseId);
+
+            foreach (var courseWork in courseWorks)
             {
-                var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id);
+                var studentSubmissions = await ListStudentSubmissions(courseId, courseWork.Id);
 
                 foreach (var submission in studentSubmissions)
                 {
@@ -212,7 +238,6 @@ namespace TLH
                                 }
                                 else
                                 {
-                                    // Key already exists, update the value
                                     fileModifiedTimes[fileName] = fileModifiedTime;
                                 }
                             }
@@ -223,6 +248,5 @@ namespace TLH
 
             return fileModifiedTimes;
         }
-
     }
 }
