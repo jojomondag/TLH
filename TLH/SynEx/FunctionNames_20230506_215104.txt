@@ -1,0 +1,72 @@
+DataCollector
+	CollectData
+PromptAnalysis
+	CalculateTokens
+TokenCounterUtil
+	GPT3EncoderSharp
+	SharpTokenCounter
+	CountInts
+ClassroomApiHelper
+	GetUserSelection
+	SelectClassroomAndGetId
+	GetCourse
+	GetAllCourses
+	GetStudent
+	ListCourseWork
+	ListStudentSubmissions
+	PrintActiveStudentsInClassroom
+	GetActiveStudents
+	GetCourseName
+	GetFileModifiedTimeFromGoogleDrive
+	GetAllDesktopFilesModifiedTime
+	GetAllGoogleDriveFilesModifiedTime
+ConsoleUtil
+	WriteLine
+DirectoryUtil
+	ShortenPath
+	ShortenFileName
+	CreateDirectory
+	CreateUserDirectoryOnDesktop
+	CreateCourseDirectory
+	CreateStudentDirectory
+	CreateAssignmentDirectory
+	SanitizeFolderName
+DriveServiceUtil
+	DownloadWithStatus
+	DownloadWithStatus
+FileDownloadService
+	ShouldDownloadFile
+	DownloadAllFilesFromClassroom
+	DownloadCourseWorkFiles
+	DownloadAttachmentsForSubmission
+	DownloadFileFromGoogleDrive
+	GetFileMimeTypeFromGoogleDrive
+	GetExportMimeTypeAndFileExtension
+	HandleDownloadProgress
+	GetFileFromGoogleDrive
+GoogleApiUtil
+	InitializeGoogleServices
+	RefreshAccessToken
+MainProgram
+	Main
+	Start
+OpenAiApiUtil
+	Connect
+	RunSimpleCompletionStreamTest
+StudentEvaluation
+	LookForUserFolder
+	GetAllUniqueAssignmentNames
+	ExtractStructuredTextFromAssignments
+	GenerateStudentAssignment
+	SetHorizontalAlignment
+	SetHeaderRow
+	AddStudentData
+	SetConditionalFormatting
+StudentTextExtractor
+	ExtractAndPrintTextData
+	ExtractTextFromStudentAssignments
+	ExtractTextFromFile
+	ExtractTextFromTxt
+	ExtractTextFromDocx
+	SaveTextToWordFile
+	RemoveInvalidXmlChars
