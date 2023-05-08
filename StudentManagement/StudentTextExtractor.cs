@@ -2,7 +2,7 @@
 using TLH.ClassroomApi;
 using Xceed.Words.NET;
 
-namespace TLH.StudentManagement
+namespace TLH
 {
     internal class StudentTextExtractor
     {
@@ -21,7 +21,7 @@ namespace TLH.StudentManagement
             }
         }
 
-        private Dictionary<string, Func<string, string>> fileHandlers;
+        private readonly Dictionary<string, Func<string, string>> fileHandlers;
 
         public async Task ExtractAndPrintTextData()
         {
@@ -46,7 +46,7 @@ namespace TLH.StudentManagement
 
         public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
         {
-            var userDirectory = MainProgram.userPathLocation;
+            var userDirectory = MainProgram.UserPathLocation;
             var courseName = ClassroomApiHelper.GetCourseName(courseId);
 
             if (userDirectory == null || courseName == null)
@@ -128,13 +128,11 @@ namespace TLH.StudentManagement
 
         private string ExtractTextFromDocx(string filePath)
         {
-            using (DocX document = DocX.Load(filePath))
-            {
-                return document.Text;
-            }
+            using DocX document = DocX.Load(filePath);
+            return document.Text;
         }
 
-        private void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
+        private static void SaveTextToWordFile(List<Tuple<bool, string, List<string>>> textData, string filePath)
         {
             // Create a new document.
             using (DocX document = DocX.Create(filePath))
@@ -162,8 +160,7 @@ namespace TLH.StudentManagement
 
             Console.WriteLine("Document created successfully.");
         }
-
-        private string RemoveInvalidXmlChars(string input)
+        private static string RemoveInvalidXmlChars(string input)
         {
             var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();
             return new string(validXmlChars);

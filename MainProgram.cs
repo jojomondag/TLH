@@ -1,16 +1,15 @@
 ﻿using TLH.ClassroomApi;
-using TLH.StudentManagement;
 using TLH.IntegrationServices;
 
 namespace TLH
 {
     public static class MainProgram
     {
-        public static string? userPathLocation;
+        public static string? UserPathLocation { get; set; }
 
-        private static async Task Main(string[] args)
+        private static async Task Main()
         {
-            userPathLocation = DirectoryUtil.CreateUserDirectoryOnDesktop();
+            UserPathLocation = DirectoryUtil.CreateUserDirectoryOnDesktop();
             GoogleApiUtil.InitializeGoogleServices();
             await Start();
         }
@@ -45,7 +44,7 @@ namespace TLH
                         break;
 
                     case ConsoleKey.D3:
-                        StudentTextExtractor ste = new StudentTextExtractor();
+                        StudentTextExtractor ste = new();
                         await ste.ExtractAndPrintTextData();
 
                         break;

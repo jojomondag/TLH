@@ -14,7 +14,7 @@ namespace GPT3Example
             var encoded = encoder.Encode(countText);
             Console.WriteLine();
             Console.WriteLine("encoded is: \r\n" + string.Join(',', encoded));
-            Console.WriteLine($"Tokens: {encoded.Count()}, Characters: {countText.Length}");
+            Console.WriteLine($"Tokens: {encoded.Count}, Characters: {countText.Length}");
             Console.WriteLine("decoded is: \r\n" + encoder.Decode(encoded));
         }
 

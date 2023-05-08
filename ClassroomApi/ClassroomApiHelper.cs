@@ -24,10 +24,9 @@ namespace TLH.ClassroomApi
                 }
             }
 
-            int selection;
             while (true)
             {
-                if (int.TryParse(Console.ReadLine(), out selection) && selection > 0 && selection <= itemList.Count)
+                if (int.TryParse(Console.ReadLine(), out int selection) && selection > 0 && selection <= itemList.Count)
                 {
                     return itemList[selection - 1];
                 }

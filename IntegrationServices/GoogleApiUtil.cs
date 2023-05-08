@@ -59,41 +59,39 @@ namespace TLH.IntegrationServices
 
         public static void RefreshAccessToken(UserCredential credential)
         {
-            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            using var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read);
+            var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+            var newCredential = new UserCredential(new GoogleAuthorizationCodeFlow(
+                new GoogleAuthorizationCodeFlow.Initializer
+                {
+                    ClientSecrets = clientSecrets
+                }),
+                "user",
+                new TokenResponse { RefreshToken = credential.Token.RefreshToken }
+            );
+            // Revoke access token of old credential to prevent unauthorized access
+            var revokeTask = newCredential.RevokeTokenAsync(CancellationToken.None);
+            revokeTask.Wait();
+            if (revokeTask.Result)
             {
-                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                var newCredential = new UserCredential(new GoogleAuthorizationCodeFlow(
-                    new GoogleAuthorizationCodeFlow.Initializer
-                    {
-                        ClientSecrets = clientSecrets
-                    }),
-                    "user",
-                    new TokenResponse { RefreshToken = credential.Token.RefreshToken }
-                );
-                // Revoke access token of old credential to prevent unauthorized access
-                var revokeTask = newCredential.RevokeTokenAsync(CancellationToken.None);
-                revokeTask.Wait();
-                if (revokeTask.Result)
-                {
-                    // Assign new credential to class property
-                    Credential = newCredential;
+                // Assign new credential to class property
+                Credential = newCredential;
 
-                    // Create new Classroom and Drive services with refreshed credential
-                    ClassroomService = new ClassroomService(new BaseClientService.Initializer()
-                    {
-                        HttpClientInitializer = Credential,
-                        ApplicationName = "TeachersLittleHelper"
-                    });
-                    DriveService = new DriveService(new BaseClientService.Initializer()
-                    {
-                        HttpClientInitializer = Credential,
-                        ApplicationName = "TeachersLittleHelper"
-                    });
-                }
-                else
+                // Create new Classroom and Drive services with refreshed credential
+                ClassroomService = new ClassroomService(new BaseClientService.Initializer()
                 {
-                    Console.WriteLine("Failed to revoke access token. Please log in with your Google account.");
-                }
+                    HttpClientInitializer = Credential,
+                    ApplicationName = "TeachersLittleHelper"
+                });
+                DriveService = new DriveService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = Credential,
+                    ApplicationName = "TeachersLittleHelper"
+                });
+            }
+            else
+            {
+                Console.WriteLine("Failed to revoke access token. Please log in with your Google account.");
             }
         }
     }

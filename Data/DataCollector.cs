@@ -1,16 +1,13 @@
-﻿using TLH.ClassroomApi;
-using TLH.StudentManagement;
-
-namespace TLH.Data
+﻿namespace TLH
 {
     public static class DataCollector
     {
-        public static async Task CollectData()
+        public static Task CollectData()
         {
             //First we extract each student text data from all their files.
-            StudentTextExtractor ste = new StudentTextExtractor();
-            string courseId = await ClassroomApiHelper.SelectClassroomAndGetId();
-            var StudentTextData = ste.ExtractTextFromStudentAssignments(courseId);
+            //StudentTextExtractor ste = new();
+            //string courseId = await ClassroomApiHelper.SelectClassroomAndGetId();
+            //var StudentTextData = ste.ExtractTextFromStudentAssignments(courseId);
 
             //Then we Create a List that will hold all the Assignments from Teachers.
 
@@ -23,6 +20,8 @@ namespace TLH.Data
             //Now we loop through each student and send their text data to the right prompt.
 
             //In the loop we will send the text and the prompts to Open ai
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace TLH.OpenAi
 {
     public class OpenAiApiUtil
     {
-        public IOpenAIService Connect()
+        public static IOpenAIService Connect()
         {
             // Get the API key from the environment variable "OPENAI_API_KEY".
             var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");

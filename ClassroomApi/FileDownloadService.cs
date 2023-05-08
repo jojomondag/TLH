@@ -1,5 +1,4 @@
 using Google.Apis.Classroom.v1.Data;
-using Google.Apis.Download;
 using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
 using TLH.IntegrationServices;
 
@@ -16,10 +15,9 @@ namespace TLH.ClassroomApi
 
             return !isDesktopFileUpToDate;
         }
-
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
-            string courseDirectory = DirectoryUtil.CreateCourseDirectory(courseId.Trim());
+            string courseDirectory = await DirectoryUtil.CreateCourseDirectory(courseId.Trim());
 
             var googleDriveFilesModifiedTime = await ClassroomApiHelper.GetAllGoogleDriveFilesModifiedTime(courseId).ConfigureAwait(false);
             var desktopFilesModifiedTime = ClassroomApiHelper.GetAllDesktopFilesModifiedTime(courseDirectory);
@@ -33,13 +31,9 @@ namespace TLH.ClassroomApi
                 await DownloadCourseWorkFiles(courseId, courseWork, courseDirectory, googleDriveFilesModifiedTimeNullable, desktopFilesModifiedTimeNullable).ConfigureAwait(false);
             }
         }
-
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id).ConfigureAwait(false);
-
-            const int maxDegreeOfParallelism = 4;
-            var downloadOptions = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
 
             foreach (var submission in studentSubmissions)
             {
@@ -56,20 +50,17 @@ namespace TLH.ClassroomApi
                 }
             }
         }
-
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             if (submission.AssignmentSubmission?.Attachments == null || submission.AssignmentSubmission.Attachments.Count == 0)
             {
                 return;
             }
-
             if (GoogleApiUtil.DriveService == null)
             {
                 Console.WriteLine("Error: Google Drive service is not initialized.");
                 return;
             }
-
             var tasks = submission.AssignmentSubmission.Attachments.Select(async attachment =>
             {
                 if (attachment?.DriveFile?.Id != null)
@@ -106,7 +97,7 @@ namespace TLH.ClassroomApi
 
                     try
                     {
-                        using (StreamWriter writer = new StreamWriter(linkFilePath, true))
+                        using (StreamWriter writer = new(linkFilePath, true))
                         {
                             await writer.WriteLineAsync(link).ConfigureAwait(false);
                         }
@@ -121,7 +112,6 @@ namespace TLH.ClassroomApi
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
-
         public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file)
         {
             if (file == null)
@@ -139,7 +129,7 @@ namespace TLH.ClassroomApi
             var filePath = Path.Combine(destinationDirectory, sanitizedFileName);
 
             // Download the file using HttpClient
-            string downloadUrl = "";
+            string downloadUrl;
             if (!string.IsNullOrEmpty(exportMimeType))
             {
                 downloadUrl = $"https://www.googleapis.com/drive/v3/files/{fileId}/export?mimeType={Uri.EscapeDataString(exportMimeType)}";
@@ -149,47 +139,40 @@ namespace TLH.ClassroomApi
                 downloadUrl = $"https://www.googleapis.com/drive/v3/files/{fileId}?alt=media";
             }
 
-            using (var httpClient = new HttpClient())
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", GoogleApiUtil.Credential?.Token.AccessToken ?? "");
+
+            try
             {
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", GoogleApiUtil.Credential?.Token.AccessToken ?? "");
+                using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                // Save the downloaded file to the destination directory
+                Console.WriteLine($"Saving file to: {filePath}");
 
                 try
                 {
-                    using (var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
-                    {
-                        response.EnsureSuccessStatusCode();
-
-                        // Save the downloaded file to the destination directory
-                        Console.WriteLine($"Saving file to: {filePath}");
-
-                        try
-                        {
-                            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                            {
-                                await response.Content.CopyToAsync(fileStream);
-                            }
-                        }
-                        catch (DirectoryNotFoundException ex)
-                        {
-                            Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
-                        }
-                        catch (IOException ex)
-                        {
-                            Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
-                        }
-                    }
+                    using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+                    await response.Content.CopyToAsync(fileStream);
                 }
-                catch (HttpRequestException ex)
+                catch (DirectoryNotFoundException ex)
                 {
-                    Console.WriteLine($"Error downloading file {fileName}: {ex.Message}");
+                    Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}\nCould not save the file: {fileName}");
                 }
             }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error downloading file {fileName}: {ex.Message}");
+            }
         }
-
         public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
         {
             if (GoogleApiUtil.DriveService == null)
@@ -197,7 +180,6 @@ namespace TLH.ClassroomApi
                 Console.WriteLine("Error: Google Drive service is not initialized.");
                 return null;
             }
-
             try
             {
                 var file = await GoogleApiUtil.DriveService.Files.Get(fileId).ExecuteAsync();
@@ -209,11 +191,10 @@ namespace TLH.ClassroomApi
                 return null;
             }
         }
-
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
         {
             string exportMimeType = "";
-            string fileExtension = "";
+            string fileExtension;
 
             switch (mimeType)
             {
@@ -236,22 +217,8 @@ namespace TLH.ClassroomApi
                     fileExtension = Path.GetExtension(fileName);
                     break;
             }
-
             return (exportMimeType, fileExtension);
         }
-
-        private static void HandleDownloadProgress(IDownloadProgress progress, string fileName, bool isSkipped)
-        {
-            if (progress.Status == DownloadStatus.Failed)
-            {
-                Console.WriteLine($"Download failed for {fileName}: {progress.Exception?.Message}");
-            }
-            else if (isSkipped)
-            {
-                Console.WriteLine($"File {fileName} already exists and is up to date. Skipping download.");
-            }
-        }
-
         public static async Task<GoogleDriveFile?> GetFileFromGoogleDrive(string fileId)
         {
             if (GoogleApiUtil.DriveService == null)
@@ -259,7 +226,6 @@ namespace TLH.ClassroomApi
                 Console.WriteLine("Error: Google Drive service is not initialized.");
                 return null;
             }
-
             try
             {
                 var request = GoogleApiUtil.DriveService.Files.Get(fileId);
