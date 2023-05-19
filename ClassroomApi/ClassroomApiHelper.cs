@@ -1,13 +1,13 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
-using SynEx.Helpers;
+using System.Collections.Concurrent;
 using TLH.IntegrationServices;
+using TLH.Services;
 
 namespace TLH.ClassroomApi
 {
     public static class ClassroomApiHelper
     {
-        // Returns the user's selected item from a list.
         public static T GetUserSelection<T>(IList<T> itemList, string displayMessage)
         {
             Console.WriteLine();
@@ -54,24 +54,59 @@ namespace TLH.ClassroomApi
             return selectedCourse.Id;
         }
         // Returns the course with the specified ID.
-        public static async ValueTask<Course> GetCourse(string courseId)
+        private static CacheService<Course> _courseCacheService = new CacheService<Course>();
+        // Returns the user's selected item from a list.
+        public static async Task<Course?> GetCourse(string courseId)
         {
-            return await GoogleApiService.ClassroomService.Courses.Get(courseId).ExecuteAsync();
-        }
-        // Returns a list of all the courses.
-        public static async ValueTask<IList<Course>> GetAllCourses()
-        {
-            var courses = new List<Course>();
-            var request = GoogleApiService.ClassroomService.Courses.List();
-            do
+            return await ExceptionHelper.TryCatchAsync(async () =>
             {
-                var response = await request.ExecuteAsync();
-                courses.AddRange(response.Courses);
-                request.PageToken = response.NextPageToken;
-            } while (!string.IsNullOrWhiteSpace(request.PageToken));
+                // Try to get the course from the cache
+                var course = _courseCacheService.Get(courseId);
 
-            return courses;
+                // If the course is not in the cache, fetch it and add it to the cache
+                if (course == null)
+                {
+                    course = await GoogleApiService.ClassroomService.Courses.Get(courseId).ExecuteAsync().ConfigureAwait(false);
+                    _courseCacheService.Add(courseId, course);
+                }
+
+                return course;
+            }, ex =>
+            {
+                ExceptionHelper.HandleException(ex, $"Error getting course with ID: {courseId}");
+            });
         }
+        private static CacheService<IList<Course>> _allCoursesCacheService = new CacheService<IList<Course>>();
+        public static async ValueTask<IList<Course>?> GetAllCourses()
+        {
+            return await ExceptionHelper.TryCatchAsync(async () =>
+            {
+                // Try to get the courses from the cache
+                var courses = _allCoursesCacheService.Get("all");
+
+                // If the courses are not in the cache, fetch them and add them to the cache
+                if (courses == null)
+                {
+                    var courseList = new List<Course>();  // change this line
+                    var request = GoogleApiService.ClassroomService.Courses.List();
+                    do
+                    {
+                        var response = await request.ExecuteAsync();
+                        courseList.AddRange(response.Courses);  // use List<Course>.AddRange method
+                        request.PageToken = response.NextPageToken;
+                    } while (!string.IsNullOrWhiteSpace(request.PageToken));
+
+                    courses = courseList;  // assign back to courses
+                    _allCoursesCacheService.Add("all", courses);
+                }
+
+                return courses;
+            }, ex =>
+            {
+                ExceptionHelper.HandleException(ex, "Error getting all courses");
+            });
+        }
+
         // Returns the student with the specified user ID in the specified course.
         public static async ValueTask<Student> GetStudent(string courseId, string userId)
         {
@@ -120,34 +155,45 @@ namespace TLH.ClassroomApi
             }
         }
         // Returns a list of all the active students in the specified course.
+        private static CacheService<IList<Student>> _allStudentsCacheService = new CacheService<IList<Student>>();
         public static async ValueTask<IList<Student>> GetActiveStudents(string courseId)
         {
-            var allStudents = new List<Student>();
-            string? nextPageToken = null;
-
-            do
+            return await ExceptionHelper.TryCatchAsync(async () =>
             {
-                var request = GoogleApiService.ClassroomService.Courses.Students.List(courseId);
-                request.PageSize = 100;
-                request.PageToken = nextPageToken;
-                var response = await request.ExecuteAsync();
+                // Try to get the students from the cache
+                var students = _allStudentsCacheService.Get(courseId);
 
-                try
+                // If the students are not in the cache, fetch them and add them to the cache
+                if (students == null)
                 {
-                    if (response.Students != null)
+                    var allStudents = new List<Student>();
+                    string? nextPageToken = null;
+
+                    do
                     {
-                        allStudents.AddRange(response.Students);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error occurred while getting students for classroom {courseId}: {ex.Message}");
+                        var request = GoogleApiService.ClassroomService.Courses.Students.List(courseId);
+                        request.PageSize = 100;
+                        request.PageToken = nextPageToken;
+                        var response = await request.ExecuteAsync();
+
+                        if (response.Students != null)
+                        {
+                            allStudents.AddRange(response.Students);
+                        }
+
+                        nextPageToken = response.NextPageToken;
+                    } while (!string.IsNullOrWhiteSpace(nextPageToken));
+
+                    students = allStudents;
+                    _allStudentsCacheService.Add(courseId, students);
                 }
 
-                nextPageToken = response.NextPageToken;
-            } while (!string.IsNullOrWhiteSpace(nextPageToken));
-
-            return allStudents;
+                return students;
+            }, ex =>
+            {
+                ExceptionHelper.HandleException(ex, $"Error getting active students for course with ID: {courseId}");
+                return new List<Student>(); // return an empty list in case of an exception
+            });
         }
         // Returns the name of the specified course.
         public static string GetCourseName(string courseId)
@@ -208,8 +254,10 @@ namespace TLH.ClassroomApi
         // Returns a dictionary of all the modified times of files in the specified course in Google Drive.
         public static async ValueTask<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
         {
-            var fileModifiedTimes = new Dictionary<string, DateTime?>();
+            var fileModifiedTimes = new ConcurrentDictionary<string, DateTime?>();
             var courseWorks = await ListCourseWork(courseId);
+
+            List<Task> tasks = new List<Task>();
 
             foreach (var courseWork in courseWorks)
             {
@@ -226,21 +274,20 @@ namespace TLH.ClassroomApi
                                 var fileId = attachment.DriveFile.Id;
                                 var fileName = attachment.DriveFile.Title;
 
-                                var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
-                                if (!fileModifiedTimes.ContainsKey(fileName))
-                                {
-                                    fileModifiedTimes.Add(fileName, fileModifiedTime);
-                                }
-                                else
-                                {
-                                    fileModifiedTimes[fileName] = fileModifiedTime;
-                                }
+                                tasks.Add(Task.Run(async () => {
+                                    var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
+                                    fileModifiedTimes.AddOrUpdate(fileName, fileModifiedTime, (key, oldValue) => fileModifiedTime);
+                                }));
                             }
                         }
                     }
                 }
             }
-            return fileModifiedTimes;
+
+            // wait for all tasks to complete
+            await Task.WhenAll(tasks);
+
+            return new Dictionary<string, DateTime?>(fileModifiedTimes);
         }
     }
 }

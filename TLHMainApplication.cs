@@ -1,4 +1,5 @@
-﻿using TLH.ClassroomApi;
+﻿using System.Diagnostics;
+using TLH.ClassroomApi;
 using TLH.IntegrationServices;
 
 namespace TLH

@@ -1,7 +1,6 @@
 using Google.Apis.Classroom.v1.Data;
 using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
 using TLH.IntegrationServices;
-using SynEx.Helpers;
 
 namespace TLH.ClassroomApi
 {
@@ -18,17 +17,22 @@ namespace TLH.ClassroomApi
         }
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
+            Console.WriteLine("Starting DownloadAllFilesFromClassroom...");
             string courseDirectory = await DirectoryUtil.CreateCourseDirectory(courseId.Trim());
+            Console.WriteLine("Course directory created...");
 
             // Start the tasks concurrently
+            Console.WriteLine("Starting tasks concurrently...");
             var googleDriveFilesModifiedTimeTask = ClassroomApiHelper.GetAllGoogleDriveFilesModifiedTime(courseId).AsTask();
             var desktopFilesModifiedTimeTask = Task.Run(() => ClassroomApiHelper.GetAllDesktopFilesModifiedTime(courseDirectory));
             var courseWorkListTask = ClassroomApiHelper.ListCourseWork(courseId).AsTask();
 
             // Wait for all tasks to complete
+            Console.WriteLine("Waiting for all tasks to complete...");
             await Task.WhenAll(googleDriveFilesModifiedTimeTask, desktopFilesModifiedTimeTask, courseWorkListTask).ConfigureAwait(false);
 
             // Extract the results
+            Console.WriteLine("Extracting the results...");
             var googleDriveFilesModifiedTime = googleDriveFilesModifiedTimeTask.Result;
             var desktopFilesModifiedTime = desktopFilesModifiedTimeTask.Result;
             var courseWorkList = courseWorkListTask.Result;
@@ -38,6 +42,7 @@ namespace TLH.ClassroomApi
 
             if (courseWorkList.Count > 0)
             {
+                Console.WriteLine("Starting to download course work files...");
                 List<Task> tasks = new List<Task>();
                 foreach (var courseWork in courseWorkList)
                 {
@@ -45,6 +50,7 @@ namespace TLH.ClassroomApi
                 }
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
+            Console.WriteLine("DownloadAllFilesFromClassroom completed.");
         }
         public static Dictionary<string, Student> studentCache = new Dictionary<string, Student>();
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
