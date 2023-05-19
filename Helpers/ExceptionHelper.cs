@@ -1,63 +1,64 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace TLH
+public static class ExceptionHelper
 {
-    // A helper class to catch exceptions and display them to the user, utilizing the MessageHelper class if needed.
-    internal static class ExceptionHelper
+    public static async Task TryCatchAsync(Func<Task> action, Action<Exception>? errorHandler = null)
     {
-        public static async Task TryCatchAsync(Func<Task> action, Action<Exception>? errorHandler = null)
+        try
         {
-            try
-            {
-                await action();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Oops! Something went wrong: {ex.Message}");
-                errorHandler?.Invoke(ex);
-            }
+            await action();
         }
-        public static T? TryCatch<T>(Func<T> action, Action<Exception>? errorHandler = null)
+        catch (Exception ex)
         {
-            try
-            {
-                return action();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Oops! Something went wrong: {ex.Message}");
-                errorHandler?.Invoke(ex);
-                return default(T);
-            }
+            await MessageHelper.SaveErrorAsync($"Oops! Something went wrong: {ex.Message}");
+            errorHandler?.Invoke(ex);
         }
-        public static async Task<T?> TryCatchAsync<T>(Func<Task<T>> action, Action<Exception>? errorHandler = null)
+    }
+
+    public static T? TryCatch<T>(Func<T> action, Action<Exception>? errorHandler = null)
+    {
+        try
         {
-            try
-            {
-                return await action();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Oops! Something went wrong: {ex.Message}");
-                errorHandler?.Invoke(ex);
-                return default(T);
-            }
+            return action();
         }
-        public static void HandleException(Exception ex, string? errorMessage = null)
+        catch (Exception ex)
         {
-            Console.WriteLine(errorMessage ?? $"Oops! Something went wrong: {ex.Message}");
+            MessageHelper.SaveError($"Oops! Something went wrong: {ex.Message}");
+            errorHandler?.Invoke(ex);
+            return default(T);
         }
-        public static async Task<TResult> TryCatchAsync<TResult>(Func<Task<TResult>> tryBlock, Func<Exception, TResult> catchBlock)
+    }
+
+    public static async Task<T?> TryCatchAsync<T>(Func<Task<T>> action, Action<Exception>? errorHandler = null)
+    {
+        try
         {
-            try
-            {
-                return await tryBlock();
-            }
-            catch (Exception ex)
-            {
-                return catchBlock(ex);
-            }
+            return await action();
+        }
+        catch (Exception ex)
+        {
+            await MessageHelper.SaveErrorAsync($"Oops! Something went wrong: {ex.Message}");
+            errorHandler?.Invoke(ex);
+            return default(T);
+        }
+    }
+
+    public static void HandleException(Exception ex, string? errorMessage = null)
+    {
+        MessageHelper.SaveError(errorMessage ?? $"Oops! Something went wrong: {ex.Message}");
+    }
+
+    public static async Task<TResult> TryCatchAsync<TResult>(Func<Task<TResult>> tryBlock, Func<Exception, TResult> catchBlock)
+    {
+        try
+        {
+            return await tryBlock();
+        }
+        catch (Exception ex)
+        {
+            await MessageHelper.SaveErrorAsync($"Oops! Something went wrong: {ex.Message}");
+            return catchBlock(ex);
         }
     }
 }

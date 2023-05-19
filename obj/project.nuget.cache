@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "0pPLSjUFDtyCUkAcBgA3qtS7I7wc7BQvyudqoEL9EhsAcaNzZmTrMpLSADEKEsH4ClFZXfLU0Fp4tazNJFDtGw==",
+  "dgSpecHash": "KcyU8uV7Pk+r7vnmVZ4GQwzm/zH42CUtReHGhc+2X+mU5nxQaDSaPy0HBtezNR+MAfB9Hvja0QFX88cjM60xpA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Josef\\Documents\\GitHub\\TLH\\TLH.csproj",
   "expectedPackageFiles": [
@@ -35,6 +35,9 @@
     "C:\\Users\\Josef\\.nuget\\packages\\microsoft.io.recyclablememorystream\\2.2.1\\microsoft.io.recyclablememorystream.2.2.1.nupkg.sha512",
     "C:\\Users\\Josef\\.nuget\\packages\\microsoft.win32.systemevents\\6.0.0\\microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "C:\\Users\\Josef\\.nuget\\packages\\newtonsoft.json\\13.0.2\\newtonsoft.json.13.0.2.nupkg.sha512",
+    "C:\\Users\\Josef\\.nuget\\packages\\serilog\\2.12.0\\serilog.2.12.0.nupkg.sha512",
+    "C:\\Users\\Josef\\.nuget\\packages\\serilog.sinks.console\\4.1.0\\serilog.sinks.console.4.1.0.nupkg.sha512",
+    "C:\\Users\\Josef\\.nuget\\packages\\serilog.sinks.file\\5.0.0\\serilog.sinks.file.5.0.0.nupkg.sha512",
     "C:\\Users\\Josef\\.nuget\\packages\\sharptoken\\1.0.26\\sharptoken.1.0.26.nupkg.sha512",
     "C:\\Users\\Josef\\.nuget\\packages\\system.diagnostics.diagnosticsource\\6.0.0\\system.diagnostics.diagnosticsource.6.0.0.nupkg.sha512",
     "C:\\Users\\Josef\\.nuget\\packages\\system.drawing.common\\6.0.0\\system.drawing.common.6.0.0.nupkg.sha512",

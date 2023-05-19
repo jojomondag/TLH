@@ -238,3 +238,6 @@ C:\Users\Josef\Documents\GitHub\TLH\obj\Debug\net6.0\refint\TLH.dll
 C:\Users\Josef\Documents\GitHub\TLH\obj\Debug\net6.0\TLH.pdb
 C:\Users\Josef\Documents\GitHub\TLH\obj\Debug\net6.0\TLH.genruntimeconfig.cache
 C:\Users\Josef\Documents\GitHub\TLH\obj\Debug\net6.0\ref\TLH.dll
+C:\Users\Josef\Documents\GitHub\TLH\bin\Debug\net6.0\Serilog.dll
+C:\Users\Josef\Documents\GitHub\TLH\bin\Debug\net6.0\Serilog.Sinks.Console.dll
+C:\Users\Josef\Documents\GitHub\TLH\bin\Debug\net6.0\Serilog.Sinks.File.dll

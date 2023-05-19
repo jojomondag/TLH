@@ -8,39 +8,39 @@ namespace TLH.ClassroomApi
 {
     public static class ClassroomApiHelper
     {
-        public static T GetUserSelection<T>(IList<T> itemList, string displayMessage)
+        public static async Task<T> GetUserSelection<T>(IList<T> itemList, string displayMessage)
         {
-            Console.WriteLine();
-            Console.WriteLine(displayMessage);
+            await MessageHelper.SaveMessageAsync("\n" + displayMessage);
 
             foreach (var item in itemList)
             {
                 if (item is Course course)
                 {
-                    Console.WriteLine($"{itemList.IndexOf(item) + 1}. {course.Name}");
+                    await MessageHelper.SaveMessageAsync($"{itemList.IndexOf(item) + 1}. {course.Name}");
                 }
                 else if (item is Student student)
                 {
-                    Console.WriteLine($"{itemList.IndexOf(item) + 1}. {student.Profile.Name.FullName}");
+                    await MessageHelper.SaveMessageAsync($"{itemList.IndexOf(item) + 1}. {student.Profile.Name.FullName}");
                 }
             }
 
             while (true)
             {
-                if (int.TryParse(Console.ReadLine(), out int selection) && selection > 0 && selection <= itemList.Count)
+                if (int.TryParse(await MessageHelper.GetInputAsync(), out int selection) && selection > 0 && selection <= itemList.Count)
                 {
                     return itemList[selection - 1];
                 }
-                Console.WriteLine("Invalid selection. Please try again.");
+                await MessageHelper.SaveMessageAsync("Invalid selection. Please try again.");
             }
         }
+
         // Selects a classroom and returns its ID.
         public static async ValueTask<string> SelectClassroomAndGetId()
         {
             var request = GoogleApiService.ClassroomService.Courses.List();
             request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
             var response = await request.ExecuteAsync();
-            var selectedCourse = GetUserSelection(response.Courses, "Select a classroom by entering its number:");
+            var selectedCourse = await GetUserSelection(response.Courses, "Select a classroom by entering its number:");
 
             if (string.IsNullOrWhiteSpace(selectedCourse.Id))
             {
@@ -48,11 +48,13 @@ namespace TLH.ClassroomApi
             }
 
             await FileDownloadService.DownloadAllFilesFromClassroom(selectedCourse.Id);
-            Console.WriteLine("Press Enter to continue.");
-            Console.ReadLine();
+            await MessageHelper.SaveMessageAsync("Press Enter to continue.");
+            await MessageHelper.GetInputAsync();
 
             return selectedCourse.Id;
         }
+
+
         // Returns the course with the specified ID.
         private static CacheService<Course> _courseCacheService = new CacheService<Course>();
         // Returns the user's selected item from a list.
@@ -148,10 +150,10 @@ namespace TLH.ClassroomApi
         {
             var activeStudents = await GetActiveStudents(courseId);
 
-            Console.WriteLine($"Active students in classroom {courseId}:");
+            MessageHelper.SaveMessage($"Active students in classroom {courseId}:");
             foreach (var student in activeStudents)
             {
-                Console.WriteLine(student.Profile.Name.FullName);
+                MessageHelper.SaveMessage(student.Profile.Name.FullName);
             }
         }
         // Returns a list of all the active students in the specified course.
@@ -204,32 +206,32 @@ namespace TLH.ClassroomApi
         // Returns the modified time of the specified file in Google Drive.
         public static async ValueTask<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
         {
-            if (GoogleApiService.DriveService == null)
-            {
-                Console.WriteLine("Error: Google Drive service is not initialized.");
-                return null;
-            }
             try
             {
+                if (GoogleApiService.DriveService == null)
+                {
+                    await MessageHelper.SaveErrorAsync("Error: Google Drive service is not initialized.");
+                    return null;
+                }
+
                 var request = GoogleApiService.DriveService.Files.Get(fileId);
-                request.Fields = "modifiedTime, name"; // Add this line to specify the fields you want to retrieve
+                request.Fields = "modifiedTime, name";
                 var file = await request.ExecuteAsync();
 
                 if (file == null)
                 {
-                    Console.WriteLine($"Error: File with ID {fileId} not found.");
+                    await MessageHelper.SaveErrorAsync($"Error: File with ID {fileId} not found.");
                     return null;
                 }
 
-                return file.ModifiedTime?.ToUniversalTime(); // Convert the modified time to UTC
+                return file.ModifiedTime?.ToUniversalTime();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error retrieving modified time for file ID {fileId}: {ex.Message}");
+                await MessageHelper.SaveErrorAsync($"Error retrieving modified time for file ID {fileId}: {ex.Message}");
                 return null;
             }
         }
-        // Returns a dictionary of all the modified times of files in the specified directory on the us er's desktop.
         public static Dictionary<string, DateTime> GetAllDesktopFilesModifiedTime(string rootDirectory)
         {
             var fileModifiedTimes = new Dictionary<string, DateTime>();
@@ -274,7 +276,8 @@ namespace TLH.ClassroomApi
                                 var fileId = attachment.DriveFile.Id;
                                 var fileName = attachment.DriveFile.Title;
 
-                                tasks.Add(Task.Run(async () => {
+                                tasks.Add(Task.Run(async () =>
+                                {
                                     var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
                                     fileModifiedTimes.AddOrUpdate(fileName, fileModifiedTime, (key, oldValue) => fileModifiedTime);
                                 }));
@@ -283,7 +286,6 @@ namespace TLH.ClassroomApi
                     }
                 }
             }
-
             // wait for all tasks to complete
             await Task.WhenAll(tasks);
 
