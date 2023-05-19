@@ -46,7 +46,7 @@ namespace TLH
 
         public async Task<Dictionary<string, List<Tuple<bool, string, List<string>>>>?> ExtractTextFromStudentAssignments(string courseId)
         {
-            var userDirectory = MainProgram.UserPathLocation;
+            var userDirectory = TLHMainApplication.UserPathLocation;
             var courseName = ClassroomApiHelper.GetCourseName(courseId);
 
             if (userDirectory == null || courseName == null)

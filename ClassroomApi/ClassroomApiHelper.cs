@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Classroom.v1;
 using Google.Apis.Classroom.v1.Data;
+using SynEx.Helpers;
 using TLH.IntegrationServices;
 
 namespace TLH.ClassroomApi
@@ -33,11 +34,10 @@ namespace TLH.ClassroomApi
                 Console.WriteLine("Invalid selection. Please try again.");
             }
         }
-
         // Selects a classroom and returns its ID.
         public static async ValueTask<string> SelectClassroomAndGetId()
         {
-            var request = GoogleApiUtil.ClassroomService.Courses.List();
+            var request = GoogleApiService.ClassroomService.Courses.List();
             request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
             var response = await request.ExecuteAsync();
             var selectedCourse = GetUserSelection(response.Courses, "Select a classroom by entering its number:");
@@ -53,18 +53,16 @@ namespace TLH.ClassroomApi
 
             return selectedCourse.Id;
         }
-
         // Returns the course with the specified ID.
         public static async ValueTask<Course> GetCourse(string courseId)
         {
-            return await GoogleApiUtil.ClassroomService.Courses.Get(courseId).ExecuteAsync();
+            return await GoogleApiService.ClassroomService.Courses.Get(courseId).ExecuteAsync();
         }
-
         // Returns a list of all the courses.
         public static async ValueTask<IList<Course>> GetAllCourses()
         {
             var courses = new List<Course>();
-            var request = GoogleApiUtil.ClassroomService.Courses.List();
+            var request = GoogleApiService.ClassroomService.Courses.List();
             do
             {
                 var response = await request.ExecuteAsync();
@@ -74,39 +72,42 @@ namespace TLH.ClassroomApi
 
             return courses;
         }
-
         // Returns the student with the specified user ID in the specified course.
         public static async ValueTask<Student> GetStudent(string courseId, string userId)
         {
-            return await GoogleApiUtil.ClassroomService.Courses.Students
+            return await GoogleApiService.ClassroomService.Courses.Students
                 .Get(courseId, userId)
                 .ExecuteAsync();
         }
-
         // Returns a list of all the course work in the specified course.
         public static async ValueTask<IList<CourseWork>> ListCourseWork(string courseId)
         {
             var courseWorks = new List<CourseWork>();
-            var request = GoogleApiUtil.ClassroomService.Courses.CourseWork.List(courseId);
-            do
+
+            await ExceptionHelper.TryCatchAsync(async () =>
             {
-                var response = await request.ExecuteAsync();
-                courseWorks.AddRange(response.CourseWork);
-                request.PageToken = response.NextPageToken;
-            } while (!string.IsNullOrWhiteSpace(request.PageToken));
+                var request = GoogleApiService.ClassroomService.Courses.CourseWork.List(courseId);
+                do
+                {
+                    var response = await request.ExecuteAsync();
+                    courseWorks.AddRange(response.CourseWork);
+                    request.PageToken = response.NextPageToken;
+                } while (!string.IsNullOrWhiteSpace(request.PageToken));
+            }, ex =>
+            {
+                ExceptionHelper.HandleException(ex, "Error retrieving course works");
+            });
 
             return courseWorks;
         }
-
         // Returns a list of all the student submissions for the specified course work in the specified course.
         public static async ValueTask<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
         {
-            var request = GoogleApiUtil.ClassroomService.Courses.CourseWork.StudentSubmissions
+            var request = GoogleApiService.ClassroomService.Courses.CourseWork.StudentSubmissions
                 .List(courseId, courseWorkId);
             var response = await request.ExecuteAsync();
             return response.StudentSubmissions;
         }
-
         // Prints the active students in the specified course.
         public static async ValueTask PrintActiveStudentsInClassroom(string courseId)
         {
@@ -118,7 +119,6 @@ namespace TLH.ClassroomApi
                 Console.WriteLine(student.Profile.Name.FullName);
             }
         }
-
         // Returns a list of all the active students in the specified course.
         public static async ValueTask<IList<Student>> GetActiveStudents(string courseId)
         {
@@ -127,7 +127,7 @@ namespace TLH.ClassroomApi
 
             do
             {
-                var request = GoogleApiUtil.ClassroomService.Courses.Students.List(courseId);
+                var request = GoogleApiService.ClassroomService.Courses.Students.List(courseId);
                 request.PageSize = 100;
                 request.PageToken = nextPageToken;
                 var response = await request.ExecuteAsync();
@@ -149,26 +149,23 @@ namespace TLH.ClassroomApi
 
             return allStudents;
         }
-
         // Returns the name of the specified course.
         public static string GetCourseName(string courseId)
         {
-            var course = GoogleApiUtil.ClassroomService.Courses.Get(courseId).Execute();
+            var course = GoogleApiService.ClassroomService.Courses.Get(courseId).Execute();
             return DirectoryUtil.SanitizeFolderName(course.Name);
         }
-
         // Returns the modified time of the specified file in Google Drive.
         public static async ValueTask<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
         {
-            if (GoogleApiUtil.DriveService == null)
+            if (GoogleApiService.DriveService == null)
             {
                 Console.WriteLine("Error: Google Drive service is not initialized.");
                 return null;
             }
-
             try
             {
-                var request = GoogleApiUtil.DriveService.Files.Get(fileId);
+                var request = GoogleApiService.DriveService.Files.Get(fileId);
                 request.Fields = "modifiedTime, name"; // Add this line to specify the fields you want to retrieve
                 var file = await request.ExecuteAsync();
 
@@ -186,8 +183,7 @@ namespace TLH.ClassroomApi
                 return null;
             }
         }
-
-        // Returns a dictionary of all the modified times of files in the specified directory on the user's desktop.
+        // Returns a dictionary of all the modified times of files in the specified directory on the us er's desktop.
         public static Dictionary<string, DateTime> GetAllDesktopFilesModifiedTime(string rootDirectory)
         {
             var fileModifiedTimes = new Dictionary<string, DateTime>();
@@ -209,7 +205,6 @@ namespace TLH.ClassroomApi
 
             return fileModifiedTimes;
         }
-
         // Returns a dictionary of all the modified times of files in the specified course in Google Drive.
         public static async ValueTask<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
         {
@@ -245,7 +240,6 @@ namespace TLH.ClassroomApi
                     }
                 }
             }
-
             return fileModifiedTimes;
         }
     }

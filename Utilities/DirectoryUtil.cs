@@ -56,13 +56,13 @@ namespace TLH
         }
         public static string CreateUserDirectoryOnDesktop()
         {
-            MainProgram.UserPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            var (userDirectory, _) = CreateDirectory(MainProgram.UserPathLocation, Environment.UserName);
+            TLHMainApplication.UserPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            var (userDirectory, _) = CreateDirectory(TLHMainApplication.UserPathLocation, Environment.UserName);
             return userDirectory;
         }
         public static async Task<string> CreateCourseDirectory(string courseId)
         {
-            if (MainProgram.UserPathLocation == null)
+            if (TLHMainApplication.UserPathLocation == null)
             {
                 // Handle the null case, for example, by returning an empty string
                 return string.Empty;
@@ -70,7 +70,7 @@ namespace TLH
 
             var course = await ClassroomApiHelper.GetCourse(courseId);
             var courseName = DirectoryUtil.SanitizeFolderName(course.Name);
-            var courseDirectory = Path.Combine(MainProgram.UserPathLocation, $"{DirectoryUtil.SanitizeFolderName(courseName)}_{courseId}");
+            var courseDirectory = Path.Combine(TLHMainApplication.UserPathLocation, $"{DirectoryUtil.SanitizeFolderName(courseName)}_{courseId}");
             Directory.CreateDirectory(courseDirectory);
 
             return courseDirectory;

@@ -40,7 +40,7 @@ namespace TLH
             var allAssignmentNamesByCourse = new Dictionary<string, List<string>>();
 
             // Retrieve a list of all active courses
-            var request = GoogleApiUtil.ClassroomService.Courses.List();
+            var request = GoogleApiService.ClassroomService.Courses.List();
             request.TeacherId = "me";
             request.CourseStates = CoursesResource.ListRequest.CourseStatesEnum.ACTIVE;
             var courses = request.Execute().Courses;
@@ -49,7 +49,7 @@ namespace TLH
             foreach (var course in courses)
             {
                 // Retrieve the list of assignments for the current course
-                var request2 = GoogleApiUtil.ClassroomService.Courses.CourseWork.List(course.Id);
+                var request2 = GoogleApiService.ClassroomService.Courses.CourseWork.List(course.Id);
                 request2.OrderBy = "dueDate asc";
                 var response2 = request2.Execute();
                 var assignments = response2.CourseWork;
