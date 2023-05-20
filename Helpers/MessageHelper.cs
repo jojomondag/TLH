@@ -15,6 +15,7 @@ public static class MessageHelper
         .WriteTo.Console()
         .WriteTo.File(new JsonFormatter(), "log.json")
         .CreateLogger();
+
     public static async Task SaveMessageAsync(string message)
     {
         if (ConsoleLoggingEnabled)
@@ -35,6 +36,7 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
+
     public static async Task SaveErrorAsync(string error)
     {
         if (ConsoleLoggingEnabled)
@@ -55,10 +57,12 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
+
     public static async Task<string?> GetInputAsync()
     {
         return ConsoleLoggingEnabled ? await Task.Run(() => Console.ReadLine()) : string.Empty;
     }
+
     public static async Task SaveMessagesToJsonFileAsync()
     {
         if (JsonLoggingEnabled)

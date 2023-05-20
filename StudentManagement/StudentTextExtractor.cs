@@ -160,6 +160,7 @@ namespace TLH
 
             Console.WriteLine("Document created successfully.");
         }
+
         private static string RemoveInvalidXmlChars(string input)
         {
             var validXmlChars = input.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();

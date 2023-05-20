@@ -54,9 +54,9 @@ namespace TLH.ClassroomApi
             return selectedCourse.Id;
         }
 
-
         // Returns the course with the specified ID.
         private static CacheService<Course> _courseCacheService = new CacheService<Course>();
+
         // Returns the user's selected item from a list.
         public static async Task<Course?> GetCourse(string courseId)
         {
@@ -78,7 +78,9 @@ namespace TLH.ClassroomApi
                 await ExceptionHelper.HandleExceptionAsync(ex, $"Error getting course with ID: {courseId}");
             });
         }
+
         private static CacheService<IList<Course>> _allCoursesCacheService = new CacheService<IList<Course>>();
+
         public static async ValueTask<IList<Course>?> GetAllCourses()
         {
             return await ExceptionHelper.TryCatchAsync(async () =>
@@ -116,6 +118,7 @@ namespace TLH.ClassroomApi
                 .Get(courseId, userId)
                 .ExecuteAsync();
         }
+
         // Returns a list of all the course work in the specified course.
         public static async ValueTask<IList<CourseWork>> ListCourseWork(string courseId)
         {
@@ -137,6 +140,7 @@ namespace TLH.ClassroomApi
 
             return courseWorks;
         }
+
         // Returns a list of all the student submissions for the specified course work in the specified course.
         public static async ValueTask<IList<StudentSubmission>> ListStudentSubmissions(string courseId, string courseWorkId)
         {
@@ -145,6 +149,7 @@ namespace TLH.ClassroomApi
             var response = await request.ExecuteAsync();
             return response.StudentSubmissions;
         }
+
         // Prints the active students in the specified course.
         public static async ValueTask PrintActiveStudentsInClassroom(string courseId)
         {
@@ -156,8 +161,10 @@ namespace TLH.ClassroomApi
                 await MessageHelper.SaveMessageAsync(student.Profile.Name.FullName);
             }
         }
+
         // Returns a list of all the active students in the specified course.
         private static CacheService<IList<Student>> _allStudentsCacheService = new CacheService<IList<Student>>();
+
         public static async Task<IList<Student>> GetActiveStudents(string courseId)
         {
             return await ExceptionHelper.TryCatchAsync(async () =>
@@ -197,12 +204,14 @@ namespace TLH.ClassroomApi
                 await Task.CompletedTask; // Return a completed Task without a value
             });
         }
+
         // Returns the name of the specified course.
         public static string GetCourseName(string courseId)
         {
             var course = GoogleApiService.ClassroomService.Courses.Get(courseId).Execute();
             return DirectoryUtil.SanitizeFolderName(course.Name);
         }
+
         // Returns the modified time of the specified file in Google Drive.
         public static async ValueTask<DateTime?> GetFileModifiedTimeFromGoogleDrive(string fileId)
         {
@@ -232,6 +241,7 @@ namespace TLH.ClassroomApi
                 return null;
             }
         }
+
         public static Dictionary<string, DateTime> GetAllDesktopFilesModifiedTime(string rootDirectory)
         {
             var fileModifiedTimes = new Dictionary<string, DateTime>();
@@ -253,6 +263,7 @@ namespace TLH.ClassroomApi
 
             return fileModifiedTimes;
         }
+
         // Returns a dictionary of all the modified times of files in the specified course in Google Drive.
         public static async ValueTask<Dictionary<string, DateTime?>> GetAllGoogleDriveFilesModifiedTime(string courseId)
         {

@@ -33,6 +33,7 @@ namespace TLH
             var shortenedFileName = ShortenFileName(fileName, allowedLengthForName);
             return Path.Combine(directory, shortenedFileName);
         }
+
         public static string ShortenFileName(string fileName, int allowedLength)
         {
             if (fileName.Length <= allowedLength)
@@ -45,6 +46,7 @@ namespace TLH
             var shortenedFileNameWithoutExtension = fileNameWithoutExtension[0..(allowedLength - extension.Length)];
             return $"{shortenedFileNameWithoutExtension}{extension}";
         }
+
         private static (string, bool) CreateDirectory(string parentDirectory, string folderName)
         {
             var directoryPath = Path.Combine(parentDirectory, SanitizeFolderName(folderName));
@@ -54,12 +56,14 @@ namespace TLH
 
             return (directoryPath, isNewlyCreated);
         }
+
         public static string CreateUserDirectoryOnDesktop()
         {
             TLHMainApplication.UserPathLocation = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             var (userDirectory, _) = CreateDirectory(TLHMainApplication.UserPathLocation, Environment.UserName);
             return userDirectory;
         }
+
         public static async Task<string> CreateCourseDirectory(string courseId)
         {
             if (TLHMainApplication.UserPathLocation == null)
@@ -75,6 +79,7 @@ namespace TLH
 
             return courseDirectory;
         }
+
         public static string CreateStudentDirectory(string courseDirectory, Student student)
         {
             var studentName = SanitizeFolderName(student.Profile.Name.FullName);

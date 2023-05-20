@@ -32,10 +32,12 @@
             return default(T);
         }
     }
+
     public static async Task HandleExceptionAsync(Exception ex, string? errorMessage = null)
     {
         await MessageHelper.SaveErrorAsync(errorMessage ?? $"Oops! Something went wrong: {ex.Message}");
     }
+
     public static async Task<TResult> TryCatchAsync<TResult>(Func<Task<TResult>> tryBlock, Func<Exception, Task<TResult>> catchBlock)
     {
         try
