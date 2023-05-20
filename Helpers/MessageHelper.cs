@@ -2,10 +2,24 @@
 using Serilog.Formatting.Json;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Threading.Tasks;
+using System.IO;
+using System;
+using System.Text;
 
+public class SuccessMessage
+{
+    public string Success { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+public class ErrorMessage
+{
+    public string Error { get; set; }
+    public DateTime Timestamp { get; set; }
+}
 public static class MessageHelper
 {
-    private static readonly ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
+    private static readonly ConcurrentQueue<object> Messages = new ConcurrentQueue<object>();
     public static bool ConsoleLoggingEnabled { get; set; } = true;
     public static bool JsonLoggingEnabled { get; set; } = true;
     private static readonly string DesktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -23,20 +37,19 @@ public static class MessageHelper
             Logger.Information(message);
         }
 
-        var successMessage = new
+        var successMessage = new SuccessMessage
         {
             Success = message,
             Timestamp = DateTime.UtcNow
         };
 
-        Messages.Enqueue(JsonSerializer.Serialize(successMessage));
+        Messages.Enqueue(successMessage);
 
         if (JsonLoggingEnabled)
         {
             await SaveMessagesToJsonFileAsync();
         }
     }
-
     public static async Task SaveErrorAsync(string error)
     {
         if (ConsoleLoggingEnabled)
@@ -44,25 +57,23 @@ public static class MessageHelper
             Logger.Error(error);
         }
 
-        var errorMessage = new
+        var errorMessage = new ErrorMessage
         {
             Error = error,
             Timestamp = DateTime.UtcNow
         };
 
-        Messages.Enqueue(JsonSerializer.Serialize(errorMessage));
+        Messages.Enqueue(errorMessage);
 
         if (JsonLoggingEnabled)
         {
             await SaveMessagesToJsonFileAsync();
         }
     }
-
     public static async Task<string?> GetInputAsync()
     {
         return ConsoleLoggingEnabled ? await Task.Run(() => Console.ReadLine()) : string.Empty;
     }
-
     public static async Task SaveMessagesToJsonFileAsync()
     {
         if (JsonLoggingEnabled)
@@ -74,19 +85,24 @@ public static class MessageHelper
 
             foreach (var message in logEvents)
             {
-                if (message.StartsWith("{") && message.Contains("\"Error\""))
+                if (message is ErrorMessage errorMessage)
                 {
-                    errorMessages.Add(message);
+                    errorMessages.Add($"Timestamp: {errorMessage.Timestamp:T}, {errorMessage.Error}");
                 }
-                else if (message.StartsWith("{") && message.Contains("\"Success\""))
+                else if (message is SuccessMessage successMessage)
                 {
-                    successMessages.Add(message);
+                    successMessages.Add($"Timestamp: {successMessage.Timestamp:T}, {successMessage.Success}");
                 }
             }
 
-            var json = JsonSerializer.Serialize(new { Errors = errorMessages, Successful = successMessages }, new JsonSerializerOptions { WriteIndented = true });
+            var aggregatedMessages = new
+            {
+                Errors = errorMessages,
+                Successful = successMessages
+            };
 
-            // Use a FileStream with FileShare.ReadWrite to allow other processes to read/write the file concurrently
+            var json = JsonSerializer.Serialize(aggregatedMessages, new JsonSerializerOptions { WriteIndented = true });
+
             using (var fileStream = new FileStream(JsonFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
             {
                 await using (var writer = new StreamWriter(fileStream))
