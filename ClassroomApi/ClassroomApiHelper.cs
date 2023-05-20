@@ -73,9 +73,9 @@ namespace TLH.ClassroomApi
                 }
 
                 return course;
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, $"Error getting course with ID: {courseId}");
+                await ExceptionHelper.HandleExceptionAsync(ex, $"Error getting course with ID: {courseId}");
             });
         }
         private static CacheService<IList<Course>> _allCoursesCacheService = new CacheService<IList<Course>>();
@@ -103,9 +103,9 @@ namespace TLH.ClassroomApi
                 }
 
                 return courses;
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, "Error getting all courses");
+                await ExceptionHelper.HandleExceptionAsync(ex, "Error getting all courses");
             });
         }
 
@@ -130,9 +130,9 @@ namespace TLH.ClassroomApi
                     courseWorks.AddRange(response.CourseWork);
                     request.PageToken = response.NextPageToken;
                 } while (!string.IsNullOrWhiteSpace(request.PageToken));
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, "Error retrieving course works");
+                await ExceptionHelper.HandleExceptionAsync(ex, "Error retrieving course works");
             });
 
             return courseWorks;
@@ -150,15 +150,15 @@ namespace TLH.ClassroomApi
         {
             var activeStudents = await GetActiveStudents(courseId);
 
-            MessageHelper.SaveMessage($"Active students in classroom {courseId}:");
+            await MessageHelper.SaveMessageAsync($"Active students in classroom {courseId}:");
             foreach (var student in activeStudents)
             {
-                MessageHelper.SaveMessage(student.Profile.Name.FullName);
+                await MessageHelper.SaveMessageAsync(student.Profile.Name.FullName);
             }
         }
         // Returns a list of all the active students in the specified course.
         private static CacheService<IList<Student>> _allStudentsCacheService = new CacheService<IList<Student>>();
-        public static async ValueTask<IList<Student>> GetActiveStudents(string courseId)
+        public static async Task<IList<Student>> GetActiveStudents(string courseId)
         {
             return await ExceptionHelper.TryCatchAsync(async () =>
             {
@@ -191,10 +191,10 @@ namespace TLH.ClassroomApi
                 }
 
                 return students;
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, $"Error getting active students for course with ID: {courseId}");
-                return new List<Student>(); // return an empty list in case of an exception
+                await ExceptionHelper.HandleExceptionAsync(ex, $"Error getting active students for course with ID: {courseId}");
+                await Task.CompletedTask; // Return a completed Task without a value
             });
         }
         // Returns the name of the specified course.
@@ -259,11 +259,13 @@ namespace TLH.ClassroomApi
             var fileModifiedTimes = new ConcurrentDictionary<string, DateTime?>();
             var courseWorks = await ListCourseWork(courseId);
 
+            var semaphore = new SemaphoreSlim(10);  // limit to 10 concurrent operations
+
             List<Task> tasks = new List<Task>();
 
             foreach (var courseWork in courseWorks)
             {
-                var studentSubmissions = await ListStudentSubmissions(courseId, courseWork.Id);
+                var studentSubmissions = await ListStudentSubmissions(courseId, courseWork.Id).ConfigureAwait(false);
 
                 foreach (var submission in studentSubmissions)
                 {
@@ -278,16 +280,26 @@ namespace TLH.ClassroomApi
 
                                 tasks.Add(Task.Run(async () =>
                                 {
-                                    var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId);
-                                    fileModifiedTimes.AddOrUpdate(fileName, fileModifiedTime, (key, oldValue) => fileModifiedTime);
+                                    await semaphore.WaitAsync();  // wait for a slot to open up
+
+                                    try
+                                    {
+                                        var fileModifiedTime = await GetFileModifiedTimeFromGoogleDrive(fileId).ConfigureAwait(false);
+                                        fileModifiedTimes.AddOrUpdate(fileName, fileModifiedTime, (key, oldValue) => fileModifiedTime);
+                                    }
+                                    finally
+                                    {
+                                        semaphore.Release();  // release the slot for others to use
+                                    }
                                 }));
                             }
                         }
                     }
                 }
             }
+
             // wait for all tasks to complete
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             return new Dictionary<string, DateTime?>(fileModifiedTimes);
         }

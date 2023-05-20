@@ -1,114 +1,95 @@
-﻿using System;
+﻿using Serilog;
+using Serilog.Formatting.Json;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
-
-public class LogEntry
-{
-    public string Message { get; set; }
-    public string Color { get; set; }
-}
 
 public static class MessageHelper
 {
-    private static readonly ConcurrentQueue<LogEntry> Messages = new ConcurrentQueue<LogEntry>();
+    private static readonly ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
     public static bool ConsoleLoggingEnabled { get; set; } = true;
     public static bool JsonLoggingEnabled { get; set; } = true;
     private static readonly string DesktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+    private static readonly string JsonFilePath = Path.Combine(DesktopPath, "log.json");
 
-    private static string GetColorCode(ConsoleColor color)
-    {
-        return color.ToString();
-    }
-
+    private static readonly ILogger Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .WriteTo.File(new JsonFormatter(), "log.json")
+        .CreateLogger();
     public static async Task SaveMessageAsync(string message)
     {
-        await Task.CompletedTask; // Replace this with actual asynchronous logic if needed.
-
         if (ConsoleLoggingEnabled)
         {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            Logger.Information(message);
         }
 
-        Messages.Enqueue(new LogEntry { Message = message, Color = GetColorCode(ConsoleColor.Green) });
-    }
+        var successMessage = new
+        {
+            Success = message,
+            Timestamp = DateTime.UtcNow
+        };
 
+        Messages.Enqueue(JsonSerializer.Serialize(successMessage));
+
+        if (JsonLoggingEnabled)
+        {
+            await SaveMessagesToJsonFileAsync();
+        }
+    }
     public static async Task SaveErrorAsync(string error)
     {
-        await Task.CompletedTask; // Replace this with actual asynchronous logic if needed.
-
         if (ConsoleLoggingEnabled)
         {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine(error);
-            Console.ForegroundColor = originalColor;
+            Logger.Error(error);
         }
 
-        Messages.Enqueue(new LogEntry { Message = $"Error: {error}", Color = GetColorCode(ConsoleColor.Red) });
-    }
+        var errorMessage = new
+        {
+            Error = error,
+            Timestamp = DateTime.UtcNow
+        };
 
-    public static async Task<string> GetInputAsync()
+        Messages.Enqueue(JsonSerializer.Serialize(errorMessage));
+
+        if (JsonLoggingEnabled)
+        {
+            await SaveMessagesToJsonFileAsync();
+        }
+    }
+    public static async Task<string?> GetInputAsync()
     {
-        await Task.CompletedTask; // Replace this with actual asynchronous logic if needed.
-        return ConsoleLoggingEnabled ? Console.ReadLine() : string.Empty;
+        return ConsoleLoggingEnabled ? await Task.Run(() => Console.ReadLine()) : string.Empty;
     }
-
     public static async Task SaveMessagesToJsonFileAsync()
     {
         if (JsonLoggingEnabled)
         {
-            var json = JsonSerializer.Serialize(Messages, new JsonSerializerOptions { WriteIndented = true });
-            var filePath = Path.Combine(DesktopPath, "log.json");
+            var logEvents = Messages.ToArray();
 
-            await File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
-        }
-    }
+            var errorMessages = new List<string>();
+            var successMessages = new List<string>();
 
-    public static void SaveMessage(string message)
-    {
-        if (ConsoleLoggingEnabled)
-        {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
-        }
+            foreach (var message in logEvents)
+            {
+                if (message.StartsWith("{") && message.Contains("\"Error\""))
+                {
+                    errorMessages.Add(message);
+                }
+                else if (message.StartsWith("{") && message.Contains("\"Success\""))
+                {
+                    successMessages.Add(message);
+                }
+            }
 
-        Messages.Enqueue(new LogEntry { Message = message, Color = GetColorCode(ConsoleColor.Green) });
-    }
+            var json = JsonSerializer.Serialize(new { Errors = errorMessages, Successful = successMessages }, new JsonSerializerOptions { WriteIndented = true });
 
-    public static void SaveError(string error)
-    {
-        if (ConsoleLoggingEnabled)
-        {
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine(error);
-            Console.ForegroundColor = originalColor;
-        }
-
-        Messages.Enqueue(new LogEntry { Message = $"Error: {error}", Color = GetColorCode(ConsoleColor.Red) });
-    }
-
-    public static string GetInput()
-    {
-        return ConsoleLoggingEnabled ? Console.ReadLine() : string.Empty;
-    }
-    public static void SaveMessagesToJsonFile()
-    {
-        if (JsonLoggingEnabled)
-        {
-            var json = JsonSerializer.Serialize(Messages, new JsonSerializerOptions { WriteIndented = true });
-            var filePath = Path.Combine(DesktopPath, "log.json");
-
-            Console.WriteLine($"Saving JSON file to: {filePath}"); // Add this line
-
-            File.WriteAllText(filePath, json);
+            // Use a FileStream with FileShare.ReadWrite to allow other processes to read/write the file concurrently
+            using (var fileStream = new FileStream(JsonFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+            {
+                await using (var writer = new StreamWriter(fileStream))
+                {
+                    await writer.WriteAsync(json);
+                }
+            }
         }
     }
 }

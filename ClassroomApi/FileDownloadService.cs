@@ -94,7 +94,7 @@ namespace TLH.ClassroomApi
                 }
                 if (GoogleApiService.DriveService == null)
                 {
-                    await ExceptionHelper.TryCatchAsync(() => MessageHelper.SaveErrorAsync("Error: Google Drive service is not initialized."));
+                    await MessageHelper.SaveErrorAsync("Error: Google Drive service is not initialized.");
                     return;
                 }
 
@@ -115,7 +115,7 @@ namespace TLH.ClassroomApi
 
                                 if (googleDriveFile == null)
                                 {
-                                    await ExceptionHelper.TryCatchAsync(() => MessageHelper.SaveErrorAsync($"Error: File with ID {fileId} not found."));
+                                    await MessageHelper.SaveErrorAsync($"Error: File with ID {fileId} not found.");
                                 }
                                 else
                                 {
@@ -141,18 +141,18 @@ namespace TLH.ClassroomApi
                                     await writer.WriteLineAsync(link).ConfigureAwait(false);
                                 }
                                 await MessageHelper.SaveMessageAsync($"Saved link for student {student.Profile.Name.FullName} to: {linkFilePath}");
-                            }, ex =>
+                            }, async ex =>
                             {
-                                ExceptionHelper.HandleException(ex, $"Error saving link for student {student.Profile.Name.FullName}");
+                                await ExceptionHelper.HandleExceptionAsync(ex, $"Error saving link for student {student.Profile.Name.FullName}");
                             });
                         }
                     });
                 });
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
-            }, ex =>
+            }, async ex =>
             {
-                MessageHelper.SaveError($"Error downloading attachments for submission: {ex.Message}");
+                await MessageHelper.SaveErrorAsync($"Error downloading attachments for submission: {ex.Message}");
             });
         }
         public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file)
@@ -161,12 +161,10 @@ namespace TLH.ClassroomApi
             {
                 if (file == null)
                 {
-                    await MessageHelper.SaveErrorAsync($"Error: File with ID {fileId} not found.");
-                    return;
+                    throw new FileNotFoundException($"Error: File with ID {fileId} not found.");
                 }
 
                 string mimeType = file.MimeType;
-
                 var (exportMimeType, fileExtension) = GetExportMimeTypeAndFileExtension(mimeType, fileName);
                 fileName = Path.GetFileNameWithoutExtension(fileName) + fileExtension;
 
@@ -195,7 +193,10 @@ namespace TLH.ClassroomApi
 
                 using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
                 await response.Content.CopyToAsync(fileStream);
-            }, ex => ExceptionHelper.HandleException(ex, $"Error downloading file {fileName}"));
+            }, ex =>
+            {
+                return ExceptionHelper.TryCatchAsync(() => MessageHelper.SaveErrorAsync($"Error downloading file {fileName}: {ex.Message}"));
+            });
         }
         public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
         {
@@ -203,15 +204,15 @@ namespace TLH.ClassroomApi
             {
                 if (GoogleApiService.DriveService == null)
                 {
-                    ExceptionHelper.HandleException(new Exception("Error: Google Drive service is not initialized."));
-                    return null;
+                    throw new Exception("Error: Google Drive service is not initialized.");
                 }
 
-                var file = await GoogleApiService.DriveService.Files.Get(fileId).ExecuteAsync();
+                var file = await GoogleApiService.DriveService.Files.Get(fileId).ExecuteAsync().ConfigureAwait(false);
                 return file.MimeType;
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, $"Error retrieving mimeType for file ID {fileId}");
+                await MessageHelper.SaveErrorAsync($"Error retrieving mimeType for file ID {fileId}: {ex.Message}");
+                return null; // if an exception occurs, null will be returned
             });
         }
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
@@ -249,25 +250,25 @@ namespace TLH.ClassroomApi
             {
                 if (GoogleApiService.DriveService == null)
                 {
-                    ExceptionHelper.HandleException(new Exception("Error: Google Drive service is not initialized."));
-                    return null;
+                    throw new Exception("Error: Google Drive service is not initialized.");
                 }
 
                 var request = GoogleApiService.DriveService.Files.Get(fileId);
                 request.Fields = "mimeType, modifiedTime, name";
-                var file = await request.ExecuteAsync();
+                var file = await request.ExecuteAsync().ConfigureAwait(false);
 
                 if (file == null)
                 {
-                    ExceptionHelper.HandleException(new Exception($"Error: File with ID {fileId} not found."));
-                    return null;
+                    throw new Exception($"Error: File with ID {fileId} not found.");
                 }
 
                 return file;
-            }, ex =>
+            }, async ex =>
             {
-                ExceptionHelper.HandleException(ex, $"Error retrieving file with ID {fileId}");
+                await MessageHelper.SaveErrorAsync($"Error retrieving file with ID {fileId}: {ex.Message}");
+                return null; // if an exception occurs, null will be returned
             });
         }
+
     }
 }
