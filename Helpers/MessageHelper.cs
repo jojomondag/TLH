@@ -2,21 +2,20 @@
 using Serilog.Formatting.Json;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.IO;
-using System;
-using System.Text;
+using System.Threading;
 
 public class SuccessMessage
 {
     public string Success { get; set; }
     public DateTime Timestamp { get; set; }
 }
+
 public class ErrorMessage
 {
     public string Error { get; set; }
     public DateTime Timestamp { get; set; }
 }
+
 public static class MessageHelper
 {
     private static readonly ConcurrentQueue<object> Messages = new ConcurrentQueue<object>();
@@ -29,6 +28,8 @@ public static class MessageHelper
         .WriteTo.Console()
         .WriteTo.File(new JsonFormatter(), "log.json")
         .CreateLogger();
+
+    private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
     public static async Task SaveMessageAsync(string message)
     {
@@ -50,6 +51,7 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
+
     public static async Task SaveErrorAsync(string error)
     {
         if (ConsoleLoggingEnabled)
@@ -70,13 +72,22 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
+
     public static async Task<string?> GetInputAsync()
     {
         return ConsoleLoggingEnabled ? await Task.Run(() => Console.ReadLine()) : string.Empty;
     }
+
     public static async Task SaveMessagesToJsonFileAsync()
     {
-        if (JsonLoggingEnabled)
+        if (!JsonLoggingEnabled)
+        {
+            return;
+        }
+
+        await semaphore.WaitAsync();
+
+        try
         {
             var logEvents = Messages.ToArray();
 
@@ -88,6 +99,7 @@ public static class MessageHelper
                 if (message is ErrorMessage errorMessage)
                 {
                     errorMessages.Add($"Timestamp: {errorMessage.Timestamp:T}, {errorMessage.Error}");
+                    successMessages.Add($"Timestamp: {errorMessage.Timestamp:T}, {errorMessage.Error}");
                 }
                 else if (message is SuccessMessage successMessage)
                 {
@@ -110,6 +122,10 @@ public static class MessageHelper
                     await writer.WriteAsync(json);
                 }
             }
+        }
+        finally
+        {
+            semaphore.Release();
         }
     }
 }

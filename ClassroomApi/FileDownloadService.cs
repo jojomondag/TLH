@@ -1,4 +1,5 @@
 using Google.Apis.Classroom.v1.Data;
+using System.Collections.Concurrent;
 using TLH.IntegrationServices;
 using GoogleDriveFile = Google.Apis.Drive.v3.Data.File;
 
@@ -54,7 +55,7 @@ namespace TLH.ClassroomApi
             await MessageHelper.SaveMessageAsync("DownloadAllFilesFromClassroom completed.");
         }
 
-        public static Dictionary<string, Student> studentCache = new Dictionary<string, Student>();
+        public static ConcurrentDictionary<string, Student> studentCache = new ConcurrentDictionary<string, Student>();
 
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
@@ -63,15 +64,8 @@ namespace TLH.ClassroomApi
             var submissionProcessingTasks = studentSubmissions.Select(async submission =>
             {
                 Student student;
-                if (!studentCache.ContainsKey(submission.UserId))
-                {
-                    student = await ClassroomApiHelper.GetStudent(courseId, submission.UserId).ConfigureAwait(false);
-                    studentCache[submission.UserId] = student; // cache the student data
-                }
-                else
-                {
-                    student = studentCache[submission.UserId]; // get student data from the cache
-                }
+
+                student = studentCache.GetOrAdd(submission.UserId, id => ClassroomApiHelper.GetStudent(courseId, id).GetAwaiter().GetResult());
 
                 var studentDirectory = Path.Combine(courseDirectory, DirectoryUtil.SanitizeFolderName(student.Profile.Name.FullName));
                 Directory.CreateDirectory(studentDirectory);
@@ -88,6 +82,8 @@ namespace TLH.ClassroomApi
             await Task.WhenAll(submissionProcessingTasks).ConfigureAwait(false);
         }
 
+        // Define the semaphore at class level.
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(10); // Limit to 5 concurrent tasks.
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             await ExceptionHelper.TryCatchAsync(async () =>
@@ -102,9 +98,10 @@ namespace TLH.ClassroomApi
                     return;
                 }
 
-                var tasks = submission.AssignmentSubmission.Attachments.Select(attachment =>
+                var tasks = submission.AssignmentSubmission.Attachments.Select(async attachment =>
                 {
-                    return Task.Run(async () =>
+                    await semaphore.WaitAsync(); // Acquire the semaphore.
+                    try
                     {
                         if (attachment?.DriveFile?.Id != null)
                         {
@@ -126,10 +123,6 @@ namespace TLH.ClassroomApi
                                     await DownloadFileFromGoogleDrive(fileId, fileName, destinationDirectory, googleDriveFile).ConfigureAwait(false);
                                 }
                             }
-                            else
-                            {
-                                await MessageHelper.SaveMessageAsync($"File {fileName} already exists and is up to date. Skipping download.");
-                            }
                         }
                         else if (attachment?.Link != null)
                         {
@@ -150,7 +143,11 @@ namespace TLH.ClassroomApi
                                 await ExceptionHelper.HandleExceptionAsync(ex, $"Error saving link for student {student.Profile.Name.FullName}");
                             });
                         }
-                    });
+                    }
+                    finally
+                    {
+                        semaphore.Release(); // Ensure the semaphore is always released.
+                    }
                 });
 
                 await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -200,10 +197,13 @@ namespace TLH.ClassroomApi
                 await response.Content.CopyToAsync(fileStream);
             }, ex =>
             {
-                return ExceptionHelper.TryCatchAsync(() => MessageHelper.SaveErrorAsync($"Error downloading file {fileName}: {ex.Message}"));
+                return ExceptionHelper.TryCatchAsync(async () =>
+                {
+                    await MessageHelper.SaveErrorAsync($"Error downloading file {fileName}: {ex.Message}");
+                    await MessageHelper.SaveErrorAsync($"Inner Exception: {ex.InnerException?.Message}");
+                });
             });
         }
-
         public static async Task<string?> GetFileMimeTypeFromGoogleDrive(string fileId)
         {
             return await ExceptionHelper.TryCatchAsync(async () =>
