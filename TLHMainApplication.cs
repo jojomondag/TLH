@@ -26,6 +26,7 @@ namespace TLH
                 Console.WriteLine("Press 2 to evaluate all student's");
                 Console.WriteLine("Press 3 to grade a course.");
                 Console.WriteLine("Press Escape to exit.");
+
                 var key = Console.ReadKey(true).Key;
 
                 if (key == ConsoleKey.Escape)

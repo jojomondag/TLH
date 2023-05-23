@@ -16,7 +16,6 @@ namespace TLH.ClassroomApi
 
             return !isDesktopFileUpToDate;
         }
-
         public static async Task DownloadAllFilesFromClassroom(string courseId)
         {
             await MessageHelper.SaveMessageAsync("Starting DownloadAllFilesFromClassroom...");
@@ -54,9 +53,7 @@ namespace TLH.ClassroomApi
             }
             await MessageHelper.SaveMessageAsync("DownloadAllFilesFromClassroom completed.");
         }
-
         public static ConcurrentDictionary<string, Student> studentCache = new ConcurrentDictionary<string, Student>();
-
         public static async Task DownloadCourseWorkFiles(string courseId, CourseWork courseWork, string courseDirectory, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             var studentSubmissions = await ClassroomApiHelper.ListStudentSubmissions(courseId, courseWork.Id).ConfigureAwait(false);
@@ -81,9 +78,8 @@ namespace TLH.ClassroomApi
 
             await Task.WhenAll(submissionProcessingTasks).ConfigureAwait(false);
         }
-
         // Define the semaphore at class level.
-        private static SemaphoreSlim semaphore = new SemaphoreSlim(10); // Limit to 5 concurrent tasks.
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(10);
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             await ExceptionHelper.TryCatchAsync(async () =>
@@ -156,7 +152,6 @@ namespace TLH.ClassroomApi
                 await MessageHelper.SaveErrorAsync($"Error downloading attachments for submission: {ex.Message}");
             });
         }
-
         public static async Task DownloadFileFromGoogleDrive(string fileId, string fileName, string destinationDirectory, GoogleDriveFile file)
         {
             await ExceptionHelper.TryCatchAsync(async () =>
@@ -221,7 +216,6 @@ namespace TLH.ClassroomApi
                 return null; // if an exception occurs, null will be returned
             });
         }
-
         private static (string, string) GetExportMimeTypeAndFileExtension(string? mimeType, string fileName)
         {
             string exportMimeType = "";
@@ -251,7 +245,6 @@ namespace TLH.ClassroomApi
 
             return (exportMimeType, fileExtension);
         }
-
         public static async Task<GoogleDriveFile?> GetFileFromGoogleDrive(string fileId)
         {
             return await ExceptionHelper.TryCatchAsync(async () =>
