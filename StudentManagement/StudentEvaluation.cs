@@ -9,7 +9,7 @@ namespace TLH
         {
             string currentYear = DateTime.Now.Year.ToString();
             string StudentAssignmentsName = "StudentAssignments_" + currentYear + ".xlsx";
-            string StudentCourseGradeFileName = "StudentCourseGrades_" + currentYear + ".xlsx";
+            string StudentCourseGradeFileName = "StudentCourseGrade_" + currentYear + ".xlsx";
 
             string userName = Environment.UserName;
 
@@ -38,16 +38,33 @@ namespace TLH
                 var excelFilePath = Path.Combine(userFolderPath, StudentAssignmentsName);
                 await DriveService.UploadFileToGoogleDrive(excelFilePath, StudentAssignmentsName, folderId, overwrite: true);
 
+                // Upload a backup copy to the AssignmentHistory folder
+                var backupName = StudentAssignmentsName.Replace(".xlsx", $"_Backup_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx");
+                await DriveService.UploadFileToGoogleDrive(excelFilePath, backupName, assignmentHistoryFolderId, overwrite: false);
+
                 // Check if the StudentGradeFile exists
                 if (!File.Exists(Path.Combine(userFolderPath, StudentCourseGradeFileName)))
                 {
                     excelGenerator.GenerateStudentGradeFile(userFolderPath, StudentCourseGradeFileName);
                     var gradeExcelFilePath = Path.Combine(userFolderPath, StudentCourseGradeFileName);
-                    await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, StudentCourseGradeFileName, folderId, overwrite: false);
+
+                    // Check if a file with the same name exists in Google Drive
+                    bool fileExists = await DriveService.CheckIfFileExists(StudentCourseGradeFileName, folderId);
+                    if (!fileExists)
+                    {
+                        await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, StudentCourseGradeFileName, folderId, overwrite: false);
+                    }
+
+                    // Regardless of whether the file exists in TLHData, create and upload a backup copy to the AssignmentHistory folder
+                    var backupGradeFileName = StudentCourseGradeFileName.Replace(".xlsx", $"_Backup_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx");
+                    await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, backupGradeFileName, assignmentHistoryFolderId, overwrite: false);
                 }
                 else
                 {
                     Console.WriteLine($"The StudentGradeFile already exists, skipping file creation.");
+                    var gradeExcelFilePath = Path.Combine(userFolderPath, StudentCourseGradeFileName);
+                    var backupGradeFileName = StudentCourseGradeFileName.Replace(".xlsx", $"_Backup_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx");
+                    await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, backupGradeFileName, assignmentHistoryFolderId, overwrite: false);
                 }
             }
             else

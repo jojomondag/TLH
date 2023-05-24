@@ -6,14 +6,12 @@ namespace TLH
     public static class TLHMainApplication
     {
         public static string? UserPathLocation { get; set; }
-
         private static async Task Main()
         {
             UserPathLocation = DirectoryUtil.CreateUserDirectoryOnDesktop();
             GoogleApiService.InitializeGoogleServices();
             await Start();
         }
-
         public static async Task Start()
         {
             Console.WriteLine("Welcome to the Classroom File Downloader!");

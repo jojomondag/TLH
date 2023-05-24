@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Download;
 using Google.Apis.Drive.v3;
 using TLH.IntegrationServices;
-
 public static class DriveService
 {
     public static void DownloadWithStatus(this FilesResource.GetRequest request, MemoryStream memoryStream)
@@ -137,5 +136,4 @@ public static class DriveService
         var files = await request.ExecuteAsync();
         return files.Files.Any();
     }
-
 }
