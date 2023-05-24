@@ -51,7 +51,7 @@ namespace TLH
                         break;
 
                     default:
-                        Console.WriteLine("Invalid input. Please try again.");
+                        await MessageHelper.SaveMessageAsync ("Invalid input. Please try again.");
                         break;
                 }
             }

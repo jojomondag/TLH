@@ -185,6 +185,58 @@ namespace TLH
                         column++;
                     }
 
+                    // Set the student's grade only if the cell is currently empty
+                    if (worksheet.Cells[row, gradeColumn].Value == null)
+                    {
+                        // TODO: Calculate the student's grade and assign it to the cell
+                        // This is a placeholder, replace it with your actual grade calculation logic
+                        string studentGrade = "A";
+                        worksheet.Cells[row, gradeColumn].Value = studentGrade;
+                    }
+
+                    row++;
+                }
+            }
+        }
+        private void AddStudentDataWithoutGrades(ExcelWorksheet worksheet, string[] studentFolders)
+        {
+            int row = 2;
+
+            foreach (string studentFolder in studentFolders)
+            {
+                string studentName = Path.GetFileName(studentFolder);
+
+                if (studentName != null)
+                {
+                    worksheet.Cells[row, 1].Value = studentName;
+
+                    int column = 2;
+
+                    while (worksheet.Cells[1, column].Value != null)
+                    {
+                        string assignmentName = worksheet.Cells[1, column].Value?.ToString() ?? string.Empty;
+                        string studentAssignmentFolder = Path.Combine(studentFolder ?? string.Empty, assignmentName ?? string.Empty);
+
+                        if (Directory.Exists(studentAssignmentFolder))
+                        {
+                            int count = Directory.EnumerateFileSystemEntries(studentAssignmentFolder, "*", SearchOption.AllDirectories).Count();
+                            if (count > 0)
+                            {
+                                using var range = worksheet.Cells[row, column];
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Green);
+                            }
+                        }
+                        else
+                        {
+                            using var range = worksheet.Cells[row, column];
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                        }
+
+                        column++;
+                    }
+
                     row++;
                 }
             }

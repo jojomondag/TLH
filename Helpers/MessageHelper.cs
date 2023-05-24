@@ -2,20 +2,16 @@
 using Serilog.Formatting.Json;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Threading;
-
 public class SuccessMessage
 {
     public string Success { get; set; }
     public DateTime Timestamp { get; set; }
 }
-
 public class ErrorMessage
 {
     public string Error { get; set; }
     public DateTime Timestamp { get; set; }
 }
-
 public static class MessageHelper
 {
     private static readonly ConcurrentQueue<object> Messages = new ConcurrentQueue<object>();
@@ -30,7 +26,6 @@ public static class MessageHelper
         .CreateLogger();
 
     private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
-
     public static async Task SaveMessageAsync(string message)
     {
         if (ConsoleLoggingEnabled)
@@ -51,7 +46,6 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
-
     public static async Task SaveErrorAsync(string error)
     {
         if (ConsoleLoggingEnabled)
@@ -72,12 +66,10 @@ public static class MessageHelper
             await SaveMessagesToJsonFileAsync();
         }
     }
-
     public static async Task<string?> GetInputAsync()
     {
         return ConsoleLoggingEnabled ? await Task.Run(() => Console.ReadLine()) : string.Empty;
     }
-
     public static async Task SaveMessagesToJsonFileAsync()
     {
         if (!JsonLoggingEnabled)

@@ -7,6 +7,8 @@ namespace TLH.ClassroomApi
 {
     public class FileDownloadService
     {
+        // Define the semaphore at class level.
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(10);
         private static bool ShouldDownloadFile(string fileId, string fileName, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             var googleDriveFileModifiedTime = googleDriveFilesModifiedTime.GetValueOrDefault(fileId);
@@ -78,8 +80,6 @@ namespace TLH.ClassroomApi
 
             await Task.WhenAll(submissionProcessingTasks).ConfigureAwait(false);
         }
-        // Define the semaphore at class level.
-        private static SemaphoreSlim semaphore = new SemaphoreSlim(10);
         public static async Task DownloadAttachmentsForSubmission(StudentSubmission submission, string destinationDirectory, Student student, Dictionary<string, DateTime?> googleDriveFilesModifiedTime, Dictionary<string, DateTime?> desktopFilesModifiedTime)
         {
             await ExceptionHelper.TryCatchAsync(async () =>

@@ -36,14 +36,14 @@ namespace TLH
                 Console.WriteLine($"Assignment History Folder has been created with ID: {assignmentHistoryFolderId}");
 
                 var excelFilePath = Path.Combine(userFolderPath, StudentAssignmentsName);
-                await DriveService.UploadFileToGoogleDrive(excelFilePath, StudentAssignmentsName, folderId);
+                await DriveService.UploadFileToGoogleDrive(excelFilePath, StudentAssignmentsName, folderId, overwrite: true);
 
                 // Check if the StudentGradeFile exists
                 if (!File.Exists(Path.Combine(userFolderPath, StudentCourseGradeFileName)))
                 {
                     excelGenerator.GenerateStudentGradeFile(userFolderPath, StudentCourseGradeFileName);
                     var gradeExcelFilePath = Path.Combine(userFolderPath, StudentCourseGradeFileName);
-                    await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, StudentCourseGradeFileName, folderId);
+                    await DriveService.UploadFileToGoogleDrive(gradeExcelFilePath, StudentCourseGradeFileName, folderId, overwrite: false);
                 }
                 else
                 {
@@ -52,7 +52,6 @@ namespace TLH
             }
             else
             {
-                Console.WriteLine();
                 Console.WriteLine($"User folder for {userName} not found on desktop.");
             }
         }
