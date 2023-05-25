@@ -14,8 +14,10 @@ namespace TLH
         {
             // Create a new Excel package
             using var excelPackage = new ExcelPackage();
+
             // Get a list of all unique assignment names for all courses
-            var allUniqueAssignmentNamesByCourse = StudentEvaluation.GetAllUniqueAssignmentNames();
+            var allUniqueAssignmentNamesByCourse =
+                StudentEvaluation.GetAllUniqueAssignmentNames();
 
             if (allUniqueAssignmentNamesByCourse != null)
             {
@@ -54,7 +56,8 @@ namespace TLH
                         }
 
                         // Add student data to the worksheet
-                        AddStudentData(worksheet, studentFolders);
+                        // The method AddStudentDataWithoutGrades is called here instead of AddStudentData
+                        AddStudentDataWithoutGrades(worksheet, studentFolders);
 
                         // Apply conditional formatting to the worksheet
                         SetConditionalFormatting(worksheet);

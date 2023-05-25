@@ -24,3 +24,33 @@
 {"Timestamp":"2023-05-24T20:18:13.3769218+02:00","Level":"Information","MessageTemplate":"File ID: 1SXvKxzvYkdxyB1NMOydcsU8t-rFD5Sqh"}
 {"Timestamp":"2023-05-24T20:18:14.9072527+02:00","Level":"Information","MessageTemplate":"File ID: 1ItXfeMwigS0JU1hy8yOsgqBA2mJ6_0jp"}
 {"Timestamp":"2023-05-24T20:18:16.3679871+02:00","Level":"Information","MessageTemplate":"File ID: 1kT-WRbZqBEEbGYeOGufg_ASfC8vxgKeK"}
+{"Timestamp":"2023-05-25T12:13:02.1241174+02:00","Level":"Information","MessageTemplate":"\nSelect a classroom by entering its number:"}
+{"Timestamp":"2023-05-25T12:13:02.4588884+02:00","Level":"Information","MessageTemplate":"1. LWA Webbserverprogrammering 1 Software 22-23"}
+{"Timestamp":"2023-05-25T12:13:02.4730576+02:00","Level":"Information","MessageTemplate":"2. MegaKursen"}
+{"Timestamp":"2023-05-25T12:13:02.4924814+02:00","Level":"Information","MessageTemplate":"3. Cad 2"}
+{"Timestamp":"2023-05-25T12:13:02.5103325+02:00","Level":"Information","MessageTemplate":"4. Teknik 1 2tek2 2022-2023"}
+{"Timestamp":"2023-05-25T12:13:02.5309172+02:00","Level":"Information","MessageTemplate":"5. Programmering 2"}
+{"Timestamp":"2023-05-25T12:13:02.5539686+02:00","Level":"Information","MessageTemplate":"6. Cad 1"}
+{"Timestamp":"2023-05-25T12:13:02.5802147+02:00","Level":"Information","MessageTemplate":"7. Programmering 1"}
+{"Timestamp":"2023-05-25T12:13:02.6059716+02:00","Level":"Information","MessageTemplate":"8. Tillämpad Programmering"}
+{"Timestamp":"2023-05-25T12:13:02.6265562+02:00","Level":"Information","MessageTemplate":"9. Certifieringar"}
+{"Timestamp":"2023-05-25T12:13:02.6483995+02:00","Level":"Information","MessageTemplate":"10. Certifiering - Elev-info"}
+{"Timestamp":"2023-05-25T12:13:03.9654076+02:00","Level":"Information","MessageTemplate":"Starting DownloadAllFilesFromClassroom..."}
+{"Timestamp":"2023-05-25T12:13:04.6521045+02:00","Level":"Information","MessageTemplate":"Course directory created..."}
+{"Timestamp":"2023-05-25T12:13:04.6646230+02:00","Level":"Information","MessageTemplate":"Starting tasks concurrently..."}
+{"Timestamp":"2023-05-25T12:13:04.7359377+02:00","Level":"Information","MessageTemplate":"Waiting for all tasks to complete..."}
+{"Timestamp":"2023-05-25T12:13:07.4459469+02:00","Level":"Information","MessageTemplate":"Extracting the results..."}
+{"Timestamp":"2023-05-25T12:13:07.4708509+02:00","Level":"Information","MessageTemplate":"Starting to download course work files..."}
+{"Timestamp":"2023-05-25T12:13:10.7970006+02:00","Level":"Information","MessageTemplate":"Saving file to: C:\\Users\\Josef\\Desktop\\Josef\\MegaKursen_598532188652\\Hugo Sjöholm\\Lämna in ett Javascript\\script.js"}
+{"Timestamp":"2023-05-25T12:13:11.1000624+02:00","Level":"Information","MessageTemplate":"Saving file to: C:\\Users\\Josef\\Desktop\\Josef\\MegaKursen_598532188652\\Hugo Sjöholm\\Lämna in 2 saker\\Hugo Sjöholm - Lämna in 2 saker.docx"}
+{"Timestamp":"2023-05-25T12:13:11.1860957+02:00","Level":"Information","MessageTemplate":"Saving file to: C:\\Users\\Josef\\Desktop\\Josef\\MegaKursen_598532188652\\Hugo Sjöholm\\Bilder är bra\\asterix.png"}
+{"Timestamp":"2023-05-25T12:13:12.4316300+02:00","Level":"Information","MessageTemplate":"Saving file to: C:\\Users\\Josef\\Desktop\\Josef\\MegaKursen_598532188652\\Hugo Sjöholm\\Lämna in 2 saker\\Hugo Sjöholm - Lämna in 2 saker.xlsx"}
+{"Timestamp":"2023-05-25T12:13:12.4530706+02:00","Level":"Information","MessageTemplate":"DownloadAllFilesFromClassroom completed."}
+{"Timestamp":"2023-05-25T12:13:12.4789514+02:00","Level":"Information","MessageTemplate":"Press Enter to continue."}
+{"Timestamp":"2023-05-25T12:13:26.4651140+02:00","Level":"Information","MessageTemplate":"File ID: 1oLu54YTLOl0mp_OfstLqGIMedNokYIBR"}
+{"Timestamp":"2023-05-25T12:13:27.9951798+02:00","Level":"Information","MessageTemplate":"File ID: 1kyQuBOSqJiFw8VYV_CYRKpkWK4E6q1ah"}
+{"Timestamp":"2023-05-25T12:13:30.8702276+02:00","Level":"Information","MessageTemplate":"File ID: 1zvmN-nFLLmTaIapP7EcA3EeYe7zaVe81"}
+{"Timestamp":"2023-05-25T12:14:04.5612953+02:00","Level":"Information","MessageTemplate":"Invalid input. Please try again."}
+{"Timestamp":"2023-05-25T12:25:16.5289352+02:00","Level":"Information","MessageTemplate":"File ID: 1ijs8ISXOpsWHyg6_FQbgiYlTVxFeL8fo"}
+{"Timestamp":"2023-05-25T12:25:18.1366066+02:00","Level":"Information","MessageTemplate":"File ID: 1ZBZvX2EZ8VRwad9XtAJSEUCdAdKu4UKB"}
+{"Timestamp":"2023-05-25T12:25:19.5187296+02:00","Level":"Information","MessageTemplate":"File ID: 1nxM1DuqutmEeMKioP2itgpe87eYqWmiM"}
